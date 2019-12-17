@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "999108175504",
+    "firebase_url": "https://my-love-d2b5e.firebaseio.com",
+    "project_id": "my-love-d2b5e",
+    "storage_bucket": "my-love-d2b5e.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:999108175504:android:66ac36a5aa6944f7f79a15",
+        "android_client_info": {
+          "package_name": "com.braketrack.my_love"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "999108175504-t12aionp72uv8ebm2skdvd5k6dtcglm7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB5zeRyZ1NH9Oh3BkE46jHzNLostD4Cj-Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "999108175504-t12aionp72uv8ebm2skdvd5k6dtcglm7.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "999108175504-ln6ur0o2kpmb9i77uer24s5bcjei0d5r.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.braketrack.myLove"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
