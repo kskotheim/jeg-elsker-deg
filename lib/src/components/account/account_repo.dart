@@ -1,17 +1,15 @@
-import 'package:my_love/src/components/account/group_list/group_info.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:my_love/src/components/auth/user.dart';
 import 'package:my_love/src/data/db.dart';
 
 abstract class AccountRepository {
   Stream<User> currentUser();
-  Future<void> renameUser(String userName);
+  Future<User> getCurrentUser();
 
-  Future<void> createGroup(String groupName);
-  Future<void> requestConnection(String password, String username);
+  Future<void> createGroup(String password);
 
   Stream<List<GroupInfo>> groupInfoStream();
 
-  
 }
 
 class AR implements AccountRepository {
@@ -22,21 +20,30 @@ class AR implements AccountRepository {
   DatabaseManager db = DB.instance;
 
   Stream<User> currentUser(){
-    return db.getUser(userId).map((document) => User(userId: document.documentID, userName: document.data[NAME]));
-  }
-  Future<void> renameUser(String username) async {
-    return db.updateUser(userId, {NAME: username});
+    return db.getUserStrean(userId).map((document) => User(userId: document.documentID, userName: document.data[NAME], password: document.data[PASSWORD]));
   }
 
-  Future<void> createGroup(String groupName){
-    return db.createGroup(groupName, userId);
-  }
-  Future<void> requestConnection(String password, String username){
-    return db.createGroupConnectionRequest(password, userId, username);
+  Future<User> getCurrentUser(){
+    return db.getSingleUser(userId).then((document) => User(userId: document.documentID, password: document.data[PASSWORD]));
   }
 
+  Future<void> createGroup(String password) async {
+    DocumentSnapshot secondUser = await db.getUserWhere(PASSWORD, password);
+    if(secondUser != null){
+      return db.createGroup(userId, secondUser.documentID);
+
+    }
+  }
 
   Stream<List<GroupInfo>> groupInfoStream(){
-    return db.groupsWithUserStream(userId).map((list) => list.map((snapshot) => GroupInfo(groupId: snapshot.documentID, groupName: snapshot.data[NAME])).toList());
+    return db.groupsWithUserStream(userId).map((list) => list.map((snapshot) => GroupInfo(groupId: snapshot.documentID, firstUser: snapshot.data[USERS][0], secondUser: snapshot.data[USERS][1])).toList());
   }
+}
+
+class GroupInfo{
+  final String groupId;
+  final String firstUser;
+  final String secondUser;
+
+  GroupInfo({this.groupId, this.firstUser, this.secondUser});
 }

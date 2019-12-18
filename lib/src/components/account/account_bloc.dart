@@ -12,12 +12,22 @@ class AccountBloc extends Bloc<AccountEvent, AccountState> {
   AccountBloc({this.userId}) {
     assert(userId != null);
     accountRepo = AR(userId: userId);
-    accountRepo.currentUser().listen((User user){
-      if(user.userName == null){
-        add(UserUnnamed());
-      } else {
-        currentUser = User(userId: userId, userName: user.userName);
+    _getUserAndListenToGroups();
+  }
+
+  void _getUserAndListenToGroups() async {
+    // TODO: stream user information? how often will this be updated?
+    currentUser = await accountRepo.getCurrentUser();
+
+    //check whether user is connected to a group yet
+    accountRepo.groupInfoStream().listen((List<GroupInfo> groups){
+      if(groups.isEmpty){
+        //if not, show the connection page
         add(GoToAccountHome());
+      }
+      else {
+        //if they are, show the group page
+        add(GoToGroup(groupId: groups[0].groupId));
       }
     });
   }
@@ -27,8 +37,8 @@ class AccountBloc extends Bloc<AccountEvent, AccountState> {
 
   @override
   Stream<AccountState> mapEventToState(AccountEvent event) async* {
-    if (event is RequestGroupConnection) {
-      accountRepo.requestConnection(event.password, currentUser.userName);
+    if (event is AttemptConnection) {
+      accountRepo.createGroup(event.password);
     }
     if (event is GoToGroup) {
       yield ShowGroupPage(groupId: event.groupId);
@@ -36,16 +46,10 @@ class AccountBloc extends Bloc<AccountEvent, AccountState> {
     if (event is GoToAccountHome) {
       yield ShowUserPage();
     }
-    if(event is UserUnnamed){
-      yield ShowRenameUserPage();
-    }
-    if (event is CreateGroup) {
-      accountRepo.createGroup(event.groupName);
-    }
-    if(event is RenameUser){
-      accountRepo.renameUser(event.userName);
-    }
+
   }
+
+  
 }
 
 //Account States
@@ -57,8 +61,6 @@ class AccountState extends Equatable {
 }
 
 class ShowUserPage extends AccountState {}
-
-class ShowRenameUserPage extends AccountState {}
 
 class ShowGroupPage extends AccountState {
   final String groupId;
@@ -79,26 +81,14 @@ class AccountEvent extends Equatable {
   List<Object> get props => [];
 }
 
-class RequestGroupConnection extends AccountEvent {
+class AttemptConnection extends AccountEvent {
   final String password;
-  RequestGroupConnection({this.password}) : assert(password != null);
-}
-
-class CreateGroup extends AccountEvent {
-  final String groupName;
-  CreateGroup({this.groupName}) : assert(groupName != null);
+  AttemptConnection({this.password}) : assert(password != null);
 }
 
 class GoToGroup extends AccountEvent {
   final String groupId;
   const GoToGroup({this.groupId}) : assert(groupId != null);
 }
-
-class RenameUser extends AccountEvent {
-  final String userName;
-  RenameUser({this.userName}) : assert(userName != null);
-}
-
-class UserUnnamed extends AccountEvent {}
 
 class GoToAccountHome extends AccountEvent {}

@@ -43,7 +43,7 @@ class _ConnectToGroupButtonState extends State<ConnectToGroupButton> {
                 child: Text('Connect'),
                 onPressed: fieldValid ? () {
                   BlocProvider.of<AccountBloc>(context).add(
-                    RequestGroupConnection(password: passwordController.text),
+                    AttemptConnection(password: passwordController.text),
                   );
                   passwordController.clear();
                   setState(() => showTextField = false);

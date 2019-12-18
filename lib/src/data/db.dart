@@ -4,36 +4,19 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 abstract class DatabaseManager {
   Future<DocumentSnapshot> createUser(String userId);
-  Stream<DocumentSnapshot> getUser(String userId);
+  Stream<DocumentSnapshot> getUserStrean(String userId);
   Future<DocumentSnapshot> getSingleUser(String userId);
+  Future<DocumentSnapshot> getUserWhere(String field, dynamic val);
   Future<void> updateUser(String userId, Map<String, dynamic> data);
   Future<void> deleteUser(String userId);
 
-  Future<void> createGroup(String groupName, String userId);
-  Stream<DocumentSnapshot> getGroup(String groupId);
+  Future<void> createGroup(String firstUser, String secondUser);
+  Stream<DocumentSnapshot> getGroupStream(String groupId);
   Future<DocumentSnapshot> getSingleGroup(String groupId);
   Stream<List<DocumentSnapshot>> groupsWithUserStream(String userId);
   Future<void> updateGroup(String groupId, Map<String, dynamic> data);
   Future<void> deleteGroup(String groupId);
 
-  Future<void> createGroupConnectionRequest(String groupId, String userId, String username);
-  Stream<List<DocumentSnapshot>> groupConnectionRequests(String groupId);
-  Future<void> deleteGroupConnectionRequest(String groupId, String userId);
-
-  Future<void> createAssetType(String groupId, String assetName);
-  Future<List<DocumentSnapshot>> getAssetTypes(String groupId);
-  Future<void> updateAssetType(
-      String groupId, String assetTypeId, Map<String, dynamic> data);
-  Future<void> deleteAssetType(String groupId, String asseTypeId);
-
-  Future<DocumentSnapshot> createAsset(
-      String groupId, String assetTypeId, String assetName);
-  Future<List<DocumentSnapshot>> getAssetsOfType(
-      String groupId, String assetTypeId);
-  Future<List<DocumentSnapshot>> getAllAssets(String groupId);
-  Future<void> updateAsset(
-      String groupId, String assetId, Map<String, dynamic> data);
-  Future<void> deleteAsset(String groupId, String assetId);
 }
 
 class DB implements DatabaseManager {
@@ -50,16 +33,20 @@ class DB implements DatabaseManager {
       groupDoc(groupId).collection(ASSETS).document(assetId);
 
   Future<DocumentSnapshot> createUser(String userId) async {
-    await userDoc(userId).setData({CREATED_AT: DateTime.now().millisecondsSinceEpoch});
+    await userDoc(userId).setData({CREATED_AT: DateTime.now().millisecondsSinceEpoch, PASSWORD: getRandomSixCharacterString()});
     return userDoc(userId).get();
   }
 
-  Stream<DocumentSnapshot> getUser(String userId) {
+  Stream<DocumentSnapshot> getUserStrean(String userId) {
     return userDoc(userId).snapshots();
   }
 
   Future<DocumentSnapshot> getSingleUser(String userId) {
     return userDoc(userId).get();
+  }
+
+  Future<DocumentSnapshot> getUserWhere(String field, dynamic val){
+    return db.collection(USERS).where(field, isEqualTo: val).getDocuments().then((snapshots) => snapshots.documents.length > 0 ? snapshots.documents[0] : null);
   }
 
   Future<void> updateUser(String userId, Map<String, dynamic> data) {
@@ -70,12 +57,12 @@ class DB implements DatabaseManager {
     return userDoc(userId).delete();
   }
 
-  Future<void> createGroup(String groupName, String userId) async {
+  Future<void> createGroup(String firstUser, String secondUser) async {
     DocumentSnapshot newGroup = await db.collection(GROUPS).document().get();
-    return groupDoc(newGroup.documentID).setData({NAME: groupName, OWNER: userId, USERS: [userId], PASSWORD: getRandomSixCharacterString()});
+    return groupDoc(newGroup.documentID).setData({USERS: [firstUser, secondUser]});
   }
 
-  Stream<DocumentSnapshot> getGroup(String groupId) {
+  Stream<DocumentSnapshot> getGroupStream(String groupId) {
     return groupDoc(groupId).snapshots();
   }
 
@@ -93,79 +80,6 @@ class DB implements DatabaseManager {
 
   Future<void> deleteGroup(String groupId) {
     return groupDoc(groupId).delete();
-  }
-
-  Future<void> createGroupConnectionRequest(String password, String userId, String username) async {
-    QuerySnapshot snapshot = await db.collection(GROUPS).where(PASSWORD, isEqualTo: password).limit(1).getDocuments();
-    if(snapshot.documents.length > 0){
-      String id = snapshot.documents[0].documentID;
-      return groupDoc(id).collection(CONNECTION_REQUESTS).document(userId).setData({NAME:username});
-    } 
-    else return null;
-  }
-
-  Stream<List<DocumentSnapshot>> groupConnectionRequests(String groupId){
-    return groupDoc(groupId).collection(CONNECTION_REQUESTS).snapshots().map((snapshot) => snapshot.documents);
-  }
-
-  Future<void> deleteGroupConnectionRequest(String groupId, String userId){
-    return groupDoc(groupId).collection(CONNECTION_REQUESTS).document(userId).delete();
-  }
-
-  Future<void> createAssetType(
-      String groupId, String assetTypeName) async {
-    DocumentSnapshot newAssetType =
-        await groupDoc(groupId).collection(ASSET_TYPES).document().get();
-    return assetTypeDoc(groupId, newAssetType.documentID)
-        .setData({NAME: assetTypeName});
-  }
-
-  Future<List<DocumentSnapshot>> getAssetTypes(String groupId) async {
-    QuerySnapshot query =
-        await groupDoc(groupId).collection(ASSET_TYPES).getDocuments();
-    return query.documents;
-  }
-
-  Future<void> updateAssetType(
-      String groupId, String assetTypeId, Map<String, dynamic> data) {
-    return assetTypeDoc(groupId, assetTypeId).updateData(data);
-  }
-
-  Future<void> deleteAssetType(String groupId, String assetTypeId) {
-    return assetTypeDoc(groupId, assetTypeId).delete();
-  }
-
-  Future<DocumentSnapshot> createAsset(
-      String groupId, String assetTypeId, String assetName) async {
-    DocumentSnapshot newAsset =
-        await groupDoc(groupId).collection(ASSETS).document().get();
-    asset(groupId, newAsset.documentID)
-        .setData({NAME: assetName, TYPE: assetTypeId});
-    return asset(groupId, newAsset.documentID).get();
-  }
-
-  Future<List<DocumentSnapshot>> getAllAssets(String groupId) async {
-    QuerySnapshot query =
-        await groupDoc(groupId).collection(ASSETS).getDocuments();
-    return query.documents;
-  }
-
-  Future<List<DocumentSnapshot>> getAssetsOfType(
-      String groupId, String assetType) async {
-    QuerySnapshot query = await groupDoc(groupId)
-        .collection(ASSETS)
-        .where(TYPE, isEqualTo: assetType)
-        .getDocuments();
-    return query.documents;
-  }
-
-  Future<void> updateAsset(
-      String groupId, String assetId, Map<String, dynamic> data) {
-    return asset(groupId, assetId).updateData(data);
-  }
-
-  Future<void> deleteAsset(String groupId, String assetId) {
-    return asset(groupId, assetId).delete();
   }
 
   // for generating passwords to request account access
