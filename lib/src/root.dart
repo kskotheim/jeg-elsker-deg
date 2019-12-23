@@ -11,6 +11,7 @@ class RootWidget extends StatelessWidget {
     return BlocProvider(
       create: (context) => AuthBloc(),
       child: Scaffold(
+        backgroundColor: Colors.purple.shade50,
         body: BlocBuilder<AuthBloc, AuthState>(
           builder: (context, state) {
             if (state is AuthStateAuthenticated) {
@@ -53,7 +54,6 @@ class SplashScreen extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
           LinearProgressIndicator(),
-          Text('Splash Screen!'),
         ],
       ),
     );

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:my_love/src/components/auth/user.dart';
@@ -8,6 +9,11 @@ import 'package:my_love/src/data/db.dart';
 abstract class GroupRepository {
   Stream<Group> getGroup();
 
+  Future<void> createSweetNothing(
+      String fromUserId, String toUserId, String sweetNothing);
+  Stream<List<SweetNothing>> sweetNothings(String toUserId);
+  Future<SweetNothing> getRandomSweetNothing(String toUserId, List<String> nothingsViewed, allNothingsViewed);
+  Future<void> deleteNothing(String toUserId, String documentId);
 }
 
 class GR implements GroupRepository {
@@ -18,9 +24,53 @@ class GR implements GroupRepository {
 
   Stream<Group> getGroup() {
     return db.getGroupStream(groupId).map((snapshot) => Group(
-        groupId: snapshot.documentID,
-        ownerId: snapshot.data[OWNER],
-        password: snapshot.data[PASSWORD]));
+            groupId: snapshot.documentID,
+            users: [
+              User(userId: snapshot.data[USERS][0]),
+              User(userId: snapshot.data[USERS][1])
+            ]));
   }
 
+  Future<void> createSweetNothing(
+      String fromUserId, String toUserId, String sweetNothing) {
+    return db.createSweetNothing(groupId, fromUserId, toUserId, sweetNothing);
+  }
+
+  Stream<List<SweetNothing>> sweetNothings(String toUserId) {
+    return db.sweetNothings(groupId, toUserId).map((documents) =>
+        documents.map((document) => SweetNothing.fromDocumentSnapshot(document)).toList()
+      );
+  }
+
+  Future<SweetNothing> getRandomSweetNothing(String toUserId, List<String> nothingsViewed, allNothingsViewed) async {
+    List<DocumentSnapshot> nothings = await db.getAllNothings(groupId, toUserId);
+
+    if(nothings.length > 0){
+      List<DocumentSnapshot> unseenNothings = nothings.where((document) => !nothingsViewed.contains(document.data[CREATED_AT].toString())).toList();
+      if(unseenNothings.length > 0){
+        return SweetNothing.fromDocumentSnapshot( unseenNothings[Random().nextInt(unseenNothings.length)]);
+      } else {
+        await allNothingsViewed();
+        return SweetNothing.fromDocumentSnapshot( nothings[Random().nextInt(nothings.length)]);
+      }
+    } else return null;
+  }
+
+  Future<void> deleteNothing(String toUserId, String documentId){
+    return db.deleteSweetNothing(groupId, toUserId, documentId);
+  }
+}
+
+class SweetNothing {
+  final String sweetNothing;
+  final int createdAt;
+  final String documentId;
+
+  SweetNothing(
+      {this.sweetNothing, this.createdAt, this.documentId});
+
+  SweetNothing.fromDocumentSnapshot(DocumentSnapshot snap)
+      : this.sweetNothing = snap.data[TEXT],
+        this.createdAt = snap.data[CREATED_AT],
+        this.documentId = snap.documentID;
 }

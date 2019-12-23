@@ -17,6 +17,11 @@ abstract class DatabaseManager {
   Future<void> updateGroup(String groupId, Map<String, dynamic> data);
   Future<void> deleteGroup(String groupId);
 
+  Future<void> createSweetNothing(String groupId, String fromUserId, String toUserId, String text);
+  Stream<List<DocumentSnapshot>> sweetNothings(String groupId, String toUserId);
+  Future<List<DocumentSnapshot>> getAllNothings(String groupId, String toUserId);
+  Future<void> editSweetNothing(String groupId, String toUserId, String documentId, String newText);
+  Future<void> deleteSweetNothing(String groupId, String toUserId, String documentId);
 }
 
 class DB implements DatabaseManager {
@@ -27,11 +32,10 @@ class DB implements DatabaseManager {
       db.collection(USERS).document(userId);
   DocumentReference groupDoc(String groupId) =>
       db.collection(GROUPS).document(groupId);
-  DocumentReference assetTypeDoc(String groupId, String assetTypeId) =>
-      groupDoc(groupId).collection(ASSET_TYPES).document(assetTypeId);
-  DocumentReference asset(String groupId, String assetId) =>
-      groupDoc(groupId).collection(ASSETS).document(assetId);
-
+  CollectionReference nothingsCollection(String groupId, String userId) => 
+      groupDoc(groupId).collection(nothingsCollctiionName(userId));
+  
+  
   Future<DocumentSnapshot> createUser(String userId) async {
     await userDoc(userId).setData({CREATED_AT: DateTime.now().millisecondsSinceEpoch, PASSWORD: getRandomSixCharacterString()});
     return userDoc(userId).get();
@@ -58,8 +62,7 @@ class DB implements DatabaseManager {
   }
 
   Future<void> createGroup(String firstUser, String secondUser) async {
-    DocumentSnapshot newGroup = await db.collection(GROUPS).document().get();
-    return groupDoc(newGroup.documentID).setData({USERS: [firstUser, secondUser]});
+    return  db.collection(GROUPS).document().setData({USERS: [firstUser, secondUser]});
   }
 
   Stream<DocumentSnapshot> getGroupStream(String groupId) {
@@ -97,6 +100,23 @@ class DB implements DatabaseManager {
 
     return password;
   }
+
+
+  Future<void> createSweetNothing(String groupId, String fromUserId, String toUserId, String text) async {
+    return nothingsCollection(groupId, toUserId).document().setData({TEXT:text, CREATED_AT: DateTime.now().millisecondsSinceEpoch});
+  }
+  Stream<List<DocumentSnapshot>> sweetNothings(String groupId, String toUserId){
+    return nothingsCollection(groupId, toUserId).orderBy(CREATED_AT).snapshots().map((query) => query.documents);
+  }
+  Future<List<DocumentSnapshot>> getAllNothings(String groupId, String toUserId){
+    return nothingsCollection(groupId, toUserId).orderBy(CREATED_AT).getDocuments().then((query) => query.documents);
+  }
+  Future<void> editSweetNothing(String groupId, String toUserId, String documentId, String newText) async {
+    return nothingsCollection(groupId, toUserId).document(documentId).updateData({TEXT: newText});
+  }
+  Future<void> deleteSweetNothing(String groupId, String toUserId, String documentId)async{
+    return nothingsCollection(groupId, toUserId).document(documentId).delete();
+  }
 }
 
 
@@ -105,11 +125,13 @@ const String NAME = 'Name';
 const String USERS = 'Users';
 const String OWNER = 'Owner';
 const String GROUPS = 'Groups';
-const String ASSET_TYPES = 'Asset Types';
-const String ASSETS = 'Assets';
-const String TYPE = 'Type';
 const String CREATED_AT = 'Created At';
-const String CONNECTION_REQUESTS = 'Connection Requests';
 const String PASSWORD = 'Password';
+const String FROM = 'From';
+const String TO = 'To';
+const String NOTHINGS = 'Nothings';
+const String TEXT = 'Text';
+
+String nothingsCollctiionName(String userId) => 'Nothings_$userId';
 
 

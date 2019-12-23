@@ -55,8 +55,12 @@ class UserPage extends StatelessWidget {
 class PasswordWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Text(
-      'Password: ${BlocProvider.of<AccountBloc>(context).currentUser.password}'
+    return Padding(
+      padding: const EdgeInsets.all(18.0),
+      child: Text(
+        'Password: ${BlocProvider.of<AccountBloc>(context).currentUser.password}',
+        style: TextStyle(fontSize: 18.0),
+      ),
     );
   }
 }

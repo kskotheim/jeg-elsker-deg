@@ -55,7 +55,7 @@ class _ConnectToGroupButtonState extends State<ConnectToGroupButton> {
       );
     } else {
       return RaisedButton(
-        child: Text('Connect to Group'),
+        child: Text('Connect to User'),
         onPressed: () => setState(() => showTextField = true),
       );
     }

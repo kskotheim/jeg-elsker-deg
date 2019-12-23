@@ -20,7 +20,7 @@ class AR implements AccountRepository {
   DatabaseManager db = DB.instance;
 
   Stream<User> currentUser(){
-    return db.getUserStrean(userId).map((document) => User(userId: document.documentID, userName: document.data[NAME], password: document.data[PASSWORD]));
+    return db.getUserStrean(userId).map((document) => User(userId: document.documentID, password: document.data[PASSWORD]));
   }
 
   Future<User> getCurrentUser(){
@@ -31,7 +31,6 @@ class AR implements AccountRepository {
     DocumentSnapshot secondUser = await db.getUserWhere(PASSWORD, password);
     if(secondUser != null){
       return db.createGroup(userId, secondUser.documentID);
-
     }
   }
 
