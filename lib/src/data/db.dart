@@ -22,6 +22,10 @@ abstract class DatabaseManager {
   Future<List<DocumentSnapshot>> getAllNothings(String groupId, String toUserId);
   Future<void> editSweetNothing(String groupId, String toUserId, String documentId, String newText);
   Future<void> deleteSweetNothing(String groupId, String toUserId, String documentId);
+
+  Future<void> addWink(String groupId, String userId, int winkActiveUntil);
+  Stream<int> winkStream(String groupId, String userId);
+
 }
 
 class DB implements DatabaseManager {
@@ -117,6 +121,16 @@ class DB implements DatabaseManager {
   Future<void> deleteSweetNothing(String groupId, String toUserId, String documentId)async{
     return nothingsCollection(groupId, toUserId).document(documentId).delete();
   }
+
+  Future<void> addWink(String groupId, String userId, int winkActiveUntil){
+    return groupDoc(groupId).collection(WINKS).document(userId).updateData({UNTIL: winkActiveUntil});
+  }
+
+  Stream<int> winkStream(String groupId, String userId){
+    return groupDoc(groupId).collection(WINKS).document(userId).snapshots().map((document) => document.data[UNTIL]);
+  }
+
+
 }
 
 
@@ -129,7 +143,8 @@ const String CREATED_AT = 'Created At';
 const String PASSWORD = 'Password';
 const String FROM = 'From';
 const String TO = 'To';
-const String NOTHINGS = 'Nothings';
+const String UNTIL = 'Until';
+const String WINKS = 'Winks';
 const String TEXT = 'Text';
 
 String nothingsCollctiionName(String userId) => 'Nothings_$userId';

@@ -6,6 +6,7 @@ import 'package:my_love/src/components/auth/user.dart';
 class AccountBloc extends Bloc<AccountEvent, AccountState> {
   final String userId;
   User currentUser;
+  bool isPro = false;
 
   AccountRepository accountRepo;
 
@@ -16,8 +17,10 @@ class AccountBloc extends Bloc<AccountEvent, AccountState> {
   }
 
   void _getUserAndListenToGroups() async {
-    // TODO: stream user information? how often will this be updated?
     currentUser = await accountRepo.getCurrentUser();
+
+    //TODO: check whether user has upgraded to pro
+    
 
     //check whether user is connected to a group yet
     accountRepo.groupInfoStream().listen((List<GroupInfo> groups){
@@ -38,7 +41,9 @@ class AccountBloc extends Bloc<AccountEvent, AccountState> {
   @override
   Stream<AccountState> mapEventToState(AccountEvent event) async* {
     if (event is AttemptConnection) {
-      accountRepo.createGroup(event.password);
+      if(event.password != currentUser.password){
+        accountRepo.createGroup(event.password);
+      }
     }
     if (event is GoToGroup) {
       yield ShowGroupPage(groupId: event.groupId);

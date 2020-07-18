@@ -14,21 +14,22 @@ abstract class GroupRepository {
   Stream<List<SweetNothing>> sweetNothings(String toUserId);
   Future<SweetNothing> getRandomSweetNothing(String toUserId, List<String> nothingsViewed, allNothingsViewed);
   Future<void> deleteNothing(String toUserId, String documentId);
+
+  Future<void> addWink(String userId);
+  Stream<int> winkActiveUntilStream(String userId);
 }
 
 class GR implements GroupRepository {
+
+  static const SweetNothing defaultNothing = SweetNothing(sweetNothing: 'You Are My Love');
+
   final String groupId;
   GR({this.groupId}) : assert(groupId != null);
 
   DatabaseManager db = DB.instance;
 
   Stream<Group> getGroup() {
-    return db.getGroupStream(groupId).map((snapshot) => Group(
-            groupId: snapshot.documentID,
-            users: [
-              User(userId: snapshot.data[USERS][0]),
-              User(userId: snapshot.data[USERS][1])
-            ]));
+    return db.getGroupStream(groupId).map((snapshot) => Group.fromSnapshot(snapshot));
   }
 
   Future<void> createSweetNothing(
@@ -53,11 +54,19 @@ class GR implements GroupRepository {
         await allNothingsViewed();
         return SweetNothing.fromDocumentSnapshot( nothings[Random().nextInt(nothings.length)]);
       }
-    } else return null;
+    } else return defaultNothing;
   }
 
   Future<void> deleteNothing(String toUserId, String documentId){
     return db.deleteSweetNothing(groupId, toUserId, documentId);
+  }
+
+
+  Future<void> addWink(String userId){
+    return db.addWink(groupId, userId, DateTime.now().millisecondsSinceEpoch + 12*60*60*1000);
+  }
+  Stream<int> winkActiveUntilStream(String userId){
+    return db.winkStream(groupId, userId);
   }
 }
 
@@ -66,7 +75,7 @@ class SweetNothing {
   final int createdAt;
   final String documentId;
 
-  SweetNothing(
+  const SweetNothing(
       {this.sweetNothing, this.createdAt, this.documentId});
 
   SweetNothing.fromDocumentSnapshot(DocumentSnapshot snap)

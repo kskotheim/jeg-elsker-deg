@@ -4,7 +4,7 @@ import 'package:my_love/src/components/account/account_bloc.dart';
 import 'package:my_love/src/components/group/group.dart';
 import 'package:my_love/src/components/group/group_bloc.dart';
 import 'package:my_love/src/components/group/group_repo.dart';
-import 'package:my_love/src/components/group/nothings/nothings_bloc.dart';
+import 'package:my_love/src/components/group/nothings/nothings_manager_bloc.dart';
 
 class NothingsManager extends StatelessWidget {
   @override
@@ -12,7 +12,7 @@ class NothingsManager extends StatelessWidget {
     Group currentGroup = BlocProvider.of<GroupBloc>(context).currentGroup;
     String userId = BlocProvider.of<AccountBloc>(context).currentUser.userId;
     return BlocProvider(
-      create: (context) => NothingsBloc(
+      create: (context) => NothingsManagerBloc(
           groupId: currentGroup.groupId,
           userId: userId,
           partnerId: currentGroup.users
@@ -40,8 +40,14 @@ class _NothingsButtonAndListState extends State<NothingsButtonAndList> {
       return Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          IconButton(
-            icon: Icon(Icons.add),
+          MaterialButton(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Icon(Icons.add),
+                Text('New Note'),
+              ]
+            ),
             onPressed: () => setState(() => showIcon = false),
           ),
           SweetNothingsList(),
@@ -71,7 +77,7 @@ class _NothingsButtonAndListState extends State<NothingsButtonAndList> {
               IconButton(
                 icon: Icon(Icons.check),
                 onPressed: () {
-                  BlocProvider.of<NothingsBloc>(context)
+                  BlocProvider.of<NothingsManagerBloc>(context)
                       .add(CreateNothing(text: textController.text));
                   textController.clear();
                   setState(() => showIcon = true);
@@ -88,7 +94,7 @@ class _NothingsButtonAndListState extends State<NothingsButtonAndList> {
 class SweetNothingsList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<NothingsBloc, NothingsState>(
+    return BlocBuilder<NothingsManagerBloc, NothingsState>(
       builder: (context, state) {
         if (state is NothingsLoading) {
           return CircularProgressIndicator();
@@ -98,6 +104,7 @@ class SweetNothingsList extends StatelessWidget {
 
           return Container(
             height: MediaQuery.of(context).size.height * .4,
+            width: MediaQuery.of(context).size.width * .75,
             child: ListView(
               children: nothings
                   .map(
@@ -123,7 +130,7 @@ class SweetNothingsList extends StatelessWidget {
                                   ],
                                 )).then((result) {
                           if (result) {
-                            BlocProvider.of<NothingsBloc>(context).add(
+                            BlocProvider.of<NothingsManagerBloc>(context).add(
                                 DeleteNothing(documentId: nothing.documentId));
                           }
                         }),

@@ -1,7 +1,7 @@
 import 'package:bloc/bloc.dart';
 import 'package:my_love/src/components/group/group_repo.dart';
 
-class NothingsBloc extends Bloc<NothingsEvent, NothingsState>{
+class NothingsManagerBloc extends Bloc<NothingsEvent, NothingsState>{
   final String groupId;
   final String userId;
   final String partnerId;
@@ -9,7 +9,7 @@ class NothingsBloc extends Bloc<NothingsEvent, NothingsState>{
 
   // List<SweetNothing> nothings;
 
-  NothingsBloc({this.userId, this.partnerId, this.groupId}){
+  NothingsManagerBloc({this.userId, this.partnerId, this.groupId}){
     assert(userId != null);
     assert(partnerId != null);
     assert(groupId != null);
