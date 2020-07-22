@@ -12,7 +12,7 @@ class SettingsPage extends StatelessWidget {
     return Stack(
       children: [
         Center(
-          child: Column(
+          child: ListView(
             children: [
               Container(
                 height: 80.0,
@@ -69,9 +69,15 @@ class LogoutButton extends StatelessWidget {
 class UpgradeToProButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return ClayContainer(
-      child: Text('Upgrade \$5'),
-      color: BlocProvider.of<ThemeBloc>(context).theme.bgColor,
+    return Center(
+      child: Container(
+        height: 50.0,
+        width: 200.0,
+        child: ClayContainer(
+          child: Center(child: Text('Upgrade \$5')),
+          color: BlocProvider.of<ThemeBloc>(context).theme.bgColor,
+        ),
+      ),
     );
   }
 }

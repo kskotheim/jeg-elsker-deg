@@ -30,7 +30,7 @@ class AR implements AccountRepository {
   Future<void> createGroup(String password) async {
     DocumentSnapshot secondUser = await db.getUserWhere(PASSWORD, password);
     if(secondUser != null){
-      return db.createGroup(userId, secondUser.documentID);
+      await db.createGroup(userId, secondUser.documentID);
     }
   }
 

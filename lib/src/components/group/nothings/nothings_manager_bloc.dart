@@ -1,39 +1,53 @@
 import 'package:bloc/bloc.dart';
 import 'package:my_love/src/components/group/group_repo.dart';
+import 'package:my_love/src/components/group/nothings/nothing.dart';
 
 class NothingsManagerBloc extends Bloc<NothingsEvent, NothingsState>{
   final String groupId;
   final String userId;
   final String partnerId;
   GroupRepository repo;
+  List<Nothing> nothings = [];
+  bool editNothingsList = false;
 
   // List<SweetNothing> nothings;
 
-  NothingsManagerBloc({this.userId, this.partnerId, this.groupId}){
+  NothingsManagerBloc({this.userId, this.partnerId, this.groupId}) : super(NothingsLoading()){
     assert(userId != null);
     assert(partnerId != null);
     assert(groupId != null);
 
     repo = GR(groupId: groupId);
 
-    repo.sweetNothings(partnerId).listen((nothings){
+    repo.sweetNothingIds(partnerId).listen((nothingIds) async {
+
+      nothings = await Future.wait<Nothing>(nothingIds.map((nothingId) async {
+        try{
+         return nothings.where((element) => element.documentId == nothingId).single;
+        } catch (e){
+          return repo.getNothing(nothingId, partnerId);
+        }
+      }));
+      
+      // elements will be null if the database entry has been deleted
+      if(nothings.length > 0){
+        nothings.removeWhere((element) => element == null);
+      }
+
       add(RecievedNothings(nothings: nothings));
     });
   }
 
   @override
-  NothingsState get initialState => NothingsLoading();
-
-  @override
   Stream<NothingsState> mapEventToState(NothingsEvent event) async* {
     if(event is CreateNothing){
-      repo.createSweetNothing(userId, partnerId, event.text);
+      repo.addNewSweetNothing(userId, partnerId, true, event.text);
     }
     if(event is RecievedNothings){
       yield NothingsUpdated(nothings: event.nothings);
     }
     if(event is DeleteNothing){
-      repo.deleteNothing(partnerId, event.documentId);
+      // repo.deleteNothing(event.documentId);
     }
 
   }
@@ -48,7 +62,7 @@ class CreateNothing extends NothingsEvent{
 }
 
 class RecievedNothings extends NothingsEvent {
-  final List<SweetNothing> nothings;
+  final List<Nothing> nothings;
   RecievedNothings({this.nothings});
 }
 
@@ -63,6 +77,7 @@ class NothingsState{}
 class NothingsLoading extends NothingsState{}
 
 class NothingsUpdated extends NothingsState{
-  final List<SweetNothing> nothings;
+  final List<Nothing> nothings;
   NothingsUpdated({this.nothings});
 }
+

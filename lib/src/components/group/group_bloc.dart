@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:bloc/bloc.dart';
 import 'package:my_love/src/components/group/group.dart';
 import 'package:my_love/src/components/group/group_repo.dart';
+import 'package:my_love/src/components/group/nothings/nothing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 
@@ -10,11 +11,15 @@ class GroupBloc extends Bloc<GroupEvent, GroupState> {
   final String groupId;
   final String currentUserId;
   Group currentGroup;
+  List<Nothing> cachedNothings = [];
+
 
   GroupRepository repo;
   SharedPreferences sharedPrefs;
 
-  GroupBloc({this.groupId, this.currentUserId}) {
+  List<String> nothingIds;
+
+  GroupBloc({this.groupId, this.currentUserId}) : super(GroupStateLoading()) {
     assert(groupId != null, currentUserId != null);
     repo = GR(groupId: groupId);
     _getSharedPrefs();
@@ -35,23 +40,20 @@ class GroupBloc extends Bloc<GroupEvent, GroupState> {
   }
 
   @override
-  GroupState get initialState => GroupStateLoading();
-
-  @override
   Stream<GroupState> mapEventToState(GroupEvent event) async* {
     
     if (event is GoToGroupHome) {
       if(_isNewDay()){
         // get a new nothing
-        SweetNothing newNothing = await repo.getRandomSweetNothing(currentUserId, _nothingsViewed(), resetNothingsViewed);
+        Nothing newNothing = await repo.getRandomSweetNothing(currentUserId, _nothingsViewed(), resetNothingsViewed);
         String image = getRandomImage();
         //set it to shared prefs
         if(newNothing != null){
           await Future.wait([
             // new nothing
-            _setTodaysNothing(newNothing.sweetNothing),
+            _setTodaysNothing(newNothing.text),
             _saveNothingUpdated(),
-            _saveNothingId(newNothing.createdAt),
+            _saveNothingId(newNothing.documentId),
             // new image
             _setTodaysImage(image),
             _saveImageId(image),
@@ -121,10 +123,10 @@ class GroupBloc extends Bloc<GroupEvent, GroupState> {
     return sharedPrefs.setStringList(IMAGES_VIEWED, []);
   }
   
-  Future<void> _saveNothingId(int createdAt){
+  Future<void> _saveNothingId(String documentId){
     List<String> nothings = _nothingsViewed();
-    if(!nothings.contains(createdAt.toString())){
-      nothings.add(createdAt.toString());
+    if(!nothings.contains(documentId)){
+      nothings.add(documentId);
     }
     return sharedPrefs.setStringList(NOTHINGS_VIEWED, nothings);
   }

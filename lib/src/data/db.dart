@@ -17,11 +17,17 @@ abstract class DatabaseManager {
   Future<void> updateGroup(String groupId, Map<String, dynamic> data);
   Future<void> deleteGroup(String groupId);
 
-  Future<void> createSweetNothing(String groupId, String fromUserId, String toUserId, String text);
-  Stream<List<DocumentSnapshot>> sweetNothings(String groupId, String toUserId);
-  Future<List<DocumentSnapshot>> getAllNothings(String groupId, String toUserId);
-  Future<void> editSweetNothing(String groupId, String toUserId, String documentId, String newText);
-  Future<void> deleteSweetNothing(String groupId, String toUserId, String documentId);
+  Future<String> createSweetNothing(String createdBy, bool public, String text);
+  Future<DocumentSnapshot> getNothing(String nothingId);
+  Future<void> updateNothing(String nothingId, Map<String, dynamic> data);
+  Future<void> deleteNothing(String nothingId);
+
+  Future<void> createNothingList(String groupId, String toUserId);
+  Future<List<String>> getNothingList(String groupId, String toUserId);
+  Stream<List<String>> nothingsListStream(String groupId, String toUserId);
+  Future<void> updateNothingList(String groupId, String toUserId, List<String> nothingList);
+
+  //TODO: add flowers, winks, poems
 
   Future<void> addWink(String groupId, String userId, int winkActiveUntil);
   Stream<int> winkStream(String groupId, String userId);
@@ -36,10 +42,12 @@ class DB implements DatabaseManager {
       db.collection(USERS).document(userId);
   DocumentReference groupDoc(String groupId) =>
       db.collection(GROUPS).document(groupId);
-  CollectionReference nothingsCollection(String groupId, String userId) => 
-      groupDoc(groupId).collection(nothingsCollctiionName(userId));
+  DocumentReference nothingDoc(String nothingId) => 
+      db.collection(NOTHINGS).document(nothingId);
   
   
+  // USER methods
+
   Future<DocumentSnapshot> createUser(String userId) async {
     await userDoc(userId).setData({CREATED_AT: DateTime.now().millisecondsSinceEpoch, PASSWORD: getRandomSixCharacterString()});
     return userDoc(userId).get();
@@ -65,8 +73,15 @@ class DB implements DatabaseManager {
     return userDoc(userId).delete();
   }
 
+  // GROUP methods
+
   Future<void> createGroup(String firstUser, String secondUser) async {
-    return  db.collection(GROUPS).document().setData({USERS: [firstUser, secondUser]});
+    DocumentReference groupDoc = await  db.collection(GROUPS).document();
+    await groupDoc.setData({USERS: [firstUser, secondUser]});
+    return Future.wait([
+      createNothingList(groupDoc.documentID, firstUser),
+      createNothingList(groupDoc.documentID, secondUser)
+    ]);
   }
 
   Stream<DocumentSnapshot> getGroupStream(String groupId) {
@@ -89,6 +104,48 @@ class DB implements DatabaseManager {
     return groupDoc(groupId).delete();
   }
 
+  // NOTHING methods
+
+  Future<String> createSweetNothing(String createdBy, bool public, String text) async {
+    DocumentReference doc = db.collection(NOTHINGS).document();
+    await doc.setData({TEXT:text, CREATED_AT: DateTime.now().millisecondsSinceEpoch});
+    return doc.documentID;
+  }
+  Future<DocumentSnapshot> getNothing(String nothingId){
+    return nothingDoc(nothingId).get();
+  }
+  Future<void> updateNothing(String nothingId, Map<String, dynamic> data){
+    return nothingDoc(nothingId).updateData(data);
+  }
+  Future<void> deleteNothing(String nothingId){
+    return nothingDoc(nothingId).delete();
+  }
+
+  // NOTHING-LIST methods
+
+  Future<void> createNothingList(String groupId, String toUserId){
+    return groupDoc(groupId).collection(NOTHINGS).document(nothingsCollctiionName(toUserId)).setData({NOTHINGS:[]});
+  }
+  Future<List<String>> getNothingList(String groupId, String toUserId){
+    return groupDoc(groupId).collection(NOTHINGS).document(nothingsCollctiionName(toUserId)).get().then((doc) => List<String>.from(doc.data[NOTHINGS]));
+  }
+  Stream<List<String>> nothingsListStream(String groupId, String toUserId){
+    return groupDoc(groupId).collection(NOTHINGS).document(nothingsCollctiionName(toUserId)).snapshots().map((snapshot) => List<String>.from(snapshot.data[NOTHINGS]));
+  }
+  Future<void> updateNothingList(String groupId, String toUserId, List<String> nothingList){
+    return groupDoc(groupId).collection(NOTHINGS).document(nothingsCollctiionName(toUserId)).updateData({NOTHINGS:nothingList});
+  }
+
+  // WINK methods
+
+  Future<void> addWink(String groupId, String userId, int winkActiveUntil){
+    return groupDoc(groupId).collection(WINKS).document(userId).updateData({UNTIL: winkActiveUntil});
+  }
+
+  Stream<int> winkStream(String groupId, String userId){
+    return groupDoc(groupId).collection(WINKS).document(userId).snapshots().map((document) => document.data[UNTIL]);
+  }
+
   // for generating passwords to request account access
   String getRandomSixCharacterString(){
     String randomChar (){
@@ -105,32 +162,6 @@ class DB implements DatabaseManager {
     return password;
   }
 
-
-  Future<void> createSweetNothing(String groupId, String fromUserId, String toUserId, String text) async {
-    return nothingsCollection(groupId, toUserId).document().setData({TEXT:text, CREATED_AT: DateTime.now().millisecondsSinceEpoch});
-  }
-  Stream<List<DocumentSnapshot>> sweetNothings(String groupId, String toUserId){
-    return nothingsCollection(groupId, toUserId).orderBy(CREATED_AT).snapshots().map((query) => query.documents);
-  }
-  Future<List<DocumentSnapshot>> getAllNothings(String groupId, String toUserId){
-    return nothingsCollection(groupId, toUserId).orderBy(CREATED_AT).getDocuments().then((query) => query.documents);
-  }
-  Future<void> editSweetNothing(String groupId, String toUserId, String documentId, String newText) async {
-    return nothingsCollection(groupId, toUserId).document(documentId).updateData({TEXT: newText});
-  }
-  Future<void> deleteSweetNothing(String groupId, String toUserId, String documentId)async{
-    return nothingsCollection(groupId, toUserId).document(documentId).delete();
-  }
-
-  Future<void> addWink(String groupId, String userId, int winkActiveUntil){
-    return groupDoc(groupId).collection(WINKS).document(userId).updateData({UNTIL: winkActiveUntil});
-  }
-
-  Stream<int> winkStream(String groupId, String userId){
-    return groupDoc(groupId).collection(WINKS).document(userId).snapshots().map((document) => document.data[UNTIL]);
-  }
-
-
 }
 
 
@@ -139,6 +170,7 @@ const String NAME = 'Name';
 const String USERS = 'Users';
 const String OWNER = 'Owner';
 const String GROUPS = 'Groups';
+const String NOTHINGS = 'Nothings';
 const String CREATED_AT = 'Created At';
 const String PASSWORD = 'Password';
 const String FROM = 'From';
@@ -147,6 +179,6 @@ const String UNTIL = 'Until';
 const String WINKS = 'Winks';
 const String TEXT = 'Text';
 
-String nothingsCollctiionName(String userId) => 'Nothings_$userId';
+String nothingsCollctiionName(String toUserId) => 'Nothings_For_$toUserId';
 
 

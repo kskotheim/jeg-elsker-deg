@@ -8,12 +8,9 @@ class ThemeBloc extends Bloc<ThemeEvent, AppTheme>{
   
   AppTheme theme;
 
-  ThemeBloc(){
+  ThemeBloc() : super(PURPLE_THEME){
     add(SettingsStarted());
   }
-
-  @override
-  get initialState => PURPLE_THEME;
 
   @override
   Stream<AppTheme> mapEventToState(event) async* {

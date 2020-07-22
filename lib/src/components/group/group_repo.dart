@@ -4,82 +4,91 @@ import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:my_love/src/components/auth/user.dart';
 import 'package:my_love/src/components/group/group.dart';
+import 'package:my_love/src/components/group/nothings/nothing.dart';
 import 'package:my_love/src/data/db.dart';
 
 abstract class GroupRepository {
   Stream<Group> getGroup();
 
-  Future<void> createSweetNothing(
-      String fromUserId, String toUserId, String sweetNothing);
-  Stream<List<SweetNothing>> sweetNothings(String toUserId);
-  Future<SweetNothing> getRandomSweetNothing(String toUserId, List<String> nothingsViewed, allNothingsViewed);
-  Future<void> deleteNothing(String toUserId, String documentId);
+  Future<void> addNewSweetNothing(String createdBy, String toUser, bool public, String text);
+  Stream<List<String>> sweetNothingIds(String toUserId);
+  Future<Nothing> getRandomSweetNothing(
+      String toUserId, List<String> nothingsViewed, Function allNothingsViewed);
+  Future<Nothing> getNothing(String nothingId, String toUserId);
+  Future<void> deleteNothing(String nothingId);
 
   Future<void> addWink(String userId);
   Stream<int> winkActiveUntilStream(String userId);
 }
 
 class GR implements GroupRepository {
-
-  static const SweetNothing defaultNothing = SweetNothing(sweetNothing: 'You Are My Love');
-
   final String groupId;
+
   GR({this.groupId}) : assert(groupId != null);
 
   DatabaseManager db = DB.instance;
 
   Stream<Group> getGroup() {
-    return db.getGroupStream(groupId).map((snapshot) => Group.fromSnapshot(snapshot));
+    return db.getGroupStream(groupId).map((snapshot) {
+      return Group.fromSnapshot(snapshot);
+    });
   }
 
-  Future<void> createSweetNothing(
-      String fromUserId, String toUserId, String sweetNothing) {
-    return db.createSweetNothing(groupId, fromUserId, toUserId, sweetNothing);
+  Future<void> addNewSweetNothing(String createdBy, String toUser, bool public, String text) async {
+    String nothingId = await db.createSweetNothing(createdBy, public, text);
+    List<String> nothings = await db.getNothingList(groupId, toUser);
+    nothings.add(nothingId);
+    return db.updateNothingList(groupId, toUser, nothings);
   }
 
-  Stream<List<SweetNothing>> sweetNothings(String toUserId) {
-    return db.sweetNothings(groupId, toUserId).map((documents) =>
-        documents.map((document) => SweetNothing.fromDocumentSnapshot(document)).toList()
-      );
+  Stream<List<String>> sweetNothingIds(String toUserId) {
+    return db.nothingsListStream(groupId, toUserId);
   }
 
-  Future<SweetNothing> getRandomSweetNothing(String toUserId, List<String> nothingsViewed, allNothingsViewed) async {
-    List<DocumentSnapshot> nothings = await db.getAllNothings(groupId, toUserId);
+  Future<Nothing> getRandomSweetNothing(
+      String toUserId, List<String> nothingsViewed, Function allNothingsViewed) async {
+    List<String> nothings = await db.getNothingList(groupId, toUserId);
 
     if(nothings.length > 0){
-      List<DocumentSnapshot> unseenNothings = nothings.where((document) => !nothingsViewed.contains(document.data[CREATED_AT].toString())).toList();
-      if(unseenNothings.length > 0){
-        return SweetNothing.fromDocumentSnapshot( unseenNothings[Random().nextInt(unseenNothings.length)]);
-      } else {
+      List<String> unseenNothings = nothings.where((id) => !nothingsViewed.contains(id)).toList();
+      if(unseenNothings.length == 0){
         await allNothingsViewed();
-        return SweetNothing.fromDocumentSnapshot( nothings[Random().nextInt(nothings.length)]);
+        DocumentSnapshot snap = await db.getNothing(nothings[Random().nextInt(nothings.length)]);
+        return Nothing.fromDocumentSnapshot(snap);
+      } else {
+        DocumentSnapshot snap = await db.getNothing(unseenNothings[Random().nextInt(unseenNothings.length)]);
+        return Nothing.fromDocumentSnapshot(snap);
       }
-    } else return defaultNothing;
+    } else return Nothing.defaultNothing;
   }
 
-  Future<void> deleteNothing(String toUserId, String documentId){
-    return db.deleteSweetNothing(groupId, toUserId, documentId);
+  Future<Nothing> getNothing(String nothingId, String toUserId) {
+    return db.getNothing(nothingId).then((snap) async {
+      if(snap.exists){
+        return Nothing.fromDocumentSnapshot(snap);
+      } else {
+        // nothing has been deleted
+        List<String> nothingsList = await db.getNothingList(groupId, toUserId);
+        if(nothingsList.remove(nothingId)){
+          db.updateNothingList(groupId, toUserId, nothingsList);
+        } else {
+          print('error removing element $nothingId from list $groupId to user $toUserId');
+        }
+        return null;
+      }
+    });
+  } 
+
+  Future<void> deleteNothing(String nothingId) {
+    return db.deleteNothing(nothingId);
   }
 
-
-  Future<void> addWink(String userId){
-    return db.addWink(groupId, userId, DateTime.now().millisecondsSinceEpoch + 12*60*60*1000);
+  Future<void> addWink(String userId) {
+    return db.addWink(groupId, userId,
+        DateTime.now().millisecondsSinceEpoch + 12 * 60 * 60 * 1000);
   }
-  Stream<int> winkActiveUntilStream(String userId){
+
+  Stream<int> winkActiveUntilStream(String userId) {
     return db.winkStream(groupId, userId);
   }
-}
-
-class SweetNothing {
-  final String sweetNothing;
-  final int createdAt;
-  final String documentId;
-
-  const SweetNothing(
-      {this.sweetNothing, this.createdAt, this.documentId});
-
-  SweetNothing.fromDocumentSnapshot(DocumentSnapshot snap)
-      : this.sweetNothing = snap.data[TEXT],
-        this.createdAt = snap.data[CREATED_AT],
-        this.documentId = snap.documentID;
 }

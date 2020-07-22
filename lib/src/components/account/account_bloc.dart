@@ -10,7 +10,7 @@ class AccountBloc extends Bloc<AccountEvent, AccountState> {
 
   AccountRepository accountRepo;
 
-  AccountBloc({this.userId}) {
+  AccountBloc({this.userId}) : super(AccountLoadingPage()) {
     assert(userId != null);
     accountRepo = AR(userId: userId);
     _getUserAndListenToGroups();
@@ -34,9 +34,6 @@ class AccountBloc extends Bloc<AccountEvent, AccountState> {
       }
     });
   }
-
-  @override
-  AccountState get initialState => AccountLoadingPage();
 
   @override
   Stream<AccountState> mapEventToState(AccountEvent event) async* {

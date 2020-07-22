@@ -23,8 +23,8 @@ dependencies:
   cupertino_icons: ^0.1.2
   cloud_firestore: ^0.12.10+2
   firebase_auth: ^0.15.0+1
-  bloc: ^4.0.0
-  flutter_bloc: ^4.0.0
+  bloc: ^5.0.0
+  flutter_bloc: ^5.0.0
   equatable: ^1.1.1
   shared_preferences: ^0.5.6
   clay_containers: ^0.2.2

@@ -10,7 +10,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthRepository repo = AuthRepository();
   String token;
 
-  AuthBloc() {
+  AuthBloc() : super(AuthStateUninitialized()) {
     startApp();
   }
 
@@ -18,9 +18,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     await Future.delayed(Duration(seconds: 1));
     add(AppStarted());
   }
-
-  @override
-  AuthState get initialState => AuthStateUninitialized();
 
   @override
   Stream<AuthState> mapEventToState(AuthEvent event) async* {

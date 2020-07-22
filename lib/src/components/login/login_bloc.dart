@@ -8,10 +8,7 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
   final AuthBloc authBloc;
 
   LoginBloc({this.authBloc})
-      : assert(authBloc != null);
-
-  @override
-  LoginState get initialState => LoginInitial();
+      : assert(authBloc != null), super(LoginInitial());
 
   @override
   Stream<LoginState> mapEventToState(LoginEvent event) async* {
