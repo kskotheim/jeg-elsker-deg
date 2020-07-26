@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:my_love/src/data/db.dart';
 
 class Nothing {
   final String documentId;
@@ -6,11 +7,6 @@ class Nothing {
   final bool public;
   final int useCt;
   final String creatorId;
-
-  static const String TEXT = 'Text';
-  static const String PUBLIC = 'Public';
-  static const String USECT = 'UseCt';
-  static const String CREATORID = 'CreatorId';
 
   static Nothing defaultNothing = Nothing('default', 'You Are My Love', false, 1, 'default');
 

@@ -61,7 +61,28 @@ class LogoutButton extends StatelessWidget {
         style: TextStyle(color: Colors.white),
       ),
       color: Colors.red,
-      onPressed: () => BlocProvider.of<AuthBloc>(context).add(LoggedOut()),
+      onPressed: () => showDialog(
+        context: context,
+        builder: (context) => SimpleDialog(
+          title: Text('Logout?'),
+          children: <Widget>[
+            FlatButton(
+              child: Text('Yes'),
+              onPressed: () => Navigator.pop(context, true),
+            ),
+            FlatButton(
+              child: Text('Cancel'),
+              onPressed: () => Navigator.pop(context, false),
+            )
+          ],
+        ),
+      ).then(
+        (result) {
+          if (result) {
+            BlocProvider.of<AuthBloc>(context).add(LoggedOut());
+          }
+        },
+      ),
     );
   }
 }

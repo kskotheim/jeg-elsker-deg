@@ -11,7 +11,6 @@ class GroupBloc extends Bloc<GroupEvent, GroupState> {
   final String groupId;
   final String currentUserId;
   Group currentGroup;
-  List<Nothing> cachedNothings = [];
 
 
   GroupRepository repo;

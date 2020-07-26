@@ -21,6 +21,7 @@ class NothingsManagerBloc extends Bloc<NothingsEvent, NothingsState>{
 
     repo.sweetNothingIds(partnerId).listen((nothingIds) async {
 
+      // check if nothing exists in cache before making db call
       nothings = await Future.wait<Nothing>(nothingIds.map((nothingId) async {
         try{
          return nothings.where((element) => element.documentId == nothingId).single;
@@ -41,13 +42,27 @@ class NothingsManagerBloc extends Bloc<NothingsEvent, NothingsState>{
   @override
   Stream<NothingsState> mapEventToState(NothingsEvent event) async* {
     if(event is CreateNothing){
-      repo.addNewSweetNothing(userId, partnerId, true, event.text);
+      repo.addNewSweetNothing(userId, partnerId, event.public, event.text);
     }
     if(event is RecievedNothings){
       yield NothingsUpdated(nothings: event.nothings);
     }
     if(event is DeleteNothing){
-      // repo.deleteNothing(event.documentId);
+      Nothing toDelete = await repo.getNothing(event.documentId, partnerId);
+      if(toDelete.public){
+        repo.deletePublicNothing(event.documentId, partnerId);
+      } else {
+        repo.deletePrivateNothing(event.documentId, partnerId);
+      }
+    }
+    if(event is NewNoteButtonPushed){
+      yield ShowNewNoteForm();
+    }
+    if(event is BrowseNotesButtonPushed){
+      yield ShowBrowseNoteScreen();
+    }
+    if(event is CancelButtonPushed){
+      yield NothingsUpdated(nothings: nothings ?? []);
     }
 
   }
@@ -58,7 +73,8 @@ class NothingsEvent{}
 
 class CreateNothing extends NothingsEvent{
   final String text;
-  CreateNothing({this.text}) : assert(text != null);
+  final bool public;
+  CreateNothing({this.text, this.public = false}) : assert(text != null);
 }
 
 class RecievedNothings extends NothingsEvent {
@@ -71,6 +87,12 @@ class DeleteNothing extends NothingsEvent {
   DeleteNothing({this.documentId}) : assert(documentId != null);
 }
 
+class NewNoteButtonPushed extends NothingsEvent {}
+
+class BrowseNotesButtonPushed extends NothingsEvent {}
+
+class CancelButtonPushed extends NothingsEvent {}
+
 
 class NothingsState{}
 
@@ -80,4 +102,8 @@ class NothingsUpdated extends NothingsState{
   final List<Nothing> nothings;
   NothingsUpdated({this.nothings});
 }
+
+class ShowNewNoteForm extends NothingsState {}
+
+class ShowBrowseNoteScreen extends NothingsState {}
 

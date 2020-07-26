@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:my_love/src/components/auth/user.dart';
 import 'package:my_love/src/components/group/group.dart';
 import 'package:my_love/src/components/group/nothings/nothing.dart';
 import 'package:my_love/src/data/db.dart';
@@ -15,7 +14,8 @@ abstract class GroupRepository {
   Future<Nothing> getRandomSweetNothing(
       String toUserId, List<String> nothingsViewed, Function allNothingsViewed);
   Future<Nothing> getNothing(String nothingId, String toUserId);
-  Future<void> deleteNothing(String nothingId);
+  Future<void> deletePrivateNothing(String nothingId, String toUserId);
+  Future<void> deletePublicNothing(String nothingId, String toUserId);
 
   Future<void> addWink(String userId);
   Stream<int> winkActiveUntilStream(String userId);
@@ -79,9 +79,21 @@ class GR implements GroupRepository {
     });
   } 
 
-  Future<void> deleteNothing(String nothingId) {
+  Future<void> deletePrivateNothing(String nothingId, String toUserId) async {
+    List<String> nothingList = await db.getNothingList(groupId, toUserId);
+    nothingList.remove(nothingId);
+    await db.updateNothingList(groupId, toUserId, nothingList);
     return db.deleteNothing(nothingId);
   }
+
+  Future<void> deletePublicNothing(String nothingId, String toUserId) async {
+    List<String> nothingList = await db.getNothingList(groupId, toUserId);
+    Nothing nothing = await db.getNothing(nothingId).then((value) => Nothing.fromDocumentSnapshot(value));
+    nothingList.remove(nothingId);
+    await db.updateNothingList(groupId, toUserId, nothingList);
+    return db.updateNothing(nothingId, {USECT: nothing.useCt -1});
+  }
+
 
   Future<void> addWink(String userId) {
     return db.addWink(groupId, userId,
