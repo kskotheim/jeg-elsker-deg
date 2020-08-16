@@ -17,21 +17,26 @@ class ThemeBloc extends Bloc<ThemeEvent, AppTheme>{
     if(event is SettingsStarted){
       await repo.initializePrefs();
       String settings = repo.getTheme();
-      switch(settings){
-        case 'Purple':
+      
+        if(settings == PURPLE_THEME.name){
           theme = PURPLE_THEME;
-          break;
-        case 'Blue':
+        } else if(settings == YELLOW_THEME.name){
+          theme = YELLOW_THEME;
+        } else if(settings == BLUE_THEME.name){
           theme = BLUE_THEME;
-          break;
-        default:
+        } else if(settings == GREEN_THEME.name){
+          theme = GREEN_THEME;
+        } else {
           theme = PURPLE_THEME;
-          break;
-      }
+          print('$settings is settings');
+        }
+
      yield theme;
     }
     if(event is SetTheme){
       theme = event.theme;
+      repo.setTheme(theme.name);
+      yield theme;
     }
   }
 

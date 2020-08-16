@@ -1,5 +1,6 @@
 import 'package:clay_containers/constants.dart';
 import 'package:clay_containers/widgets/clay_containers.dart';
+import 'package:dough/dough.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:my_love/src/components/account/account_bloc.dart';
@@ -19,61 +20,66 @@ class GroupPage extends StatelessWidget {
           currentUserId:
               BlocProvider.of<AccountBloc>(context).currentUser.userId),
       child: Center(
-        child: BlocBuilder<GroupBloc, GroupState>(builder: (context, state) {
-          if (state is GroupStateLoading) {
-            return CircularProgressIndicator(
-              strokeWidth: 6.0,
+        child: BlocBuilder<GroupBloc, GroupState>(
+          builder: (context, state) {
+            return AnimatedSwitcher(
+              duration: Duration(milliseconds: 400),
+              child: _buildPage(context, state),
             );
-          }
-          if (state is ShowGroupInfo) {
-            return Stack(
-              children: <Widget>[
-                Center(
-                  child: SingleChildScrollView(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        Container(height: 20.0),
-                        ClayContainer(
-                          color:
-                              BlocProvider.of<ThemeBloc>(context).theme.bgColor,
-                          child: SweetNothingWidget(),
-                          borderRadius: 35.0,
-                        ),
-                        Container(height: 30.0),
-                        ClayContainer(
-                          depth: 30,
-                          spread: 20.0,
-                          color:
-                              BlocProvider.of<ThemeBloc>(context).theme.bgColor,
-                          curveType: CurveType.concave,
-                          child: ImageWidget(),
-                        ),
-                        Container(
-                          height: 50.0,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                Align(
-                  alignment: Alignment.topLeft,
-                  child: Padding(
-                    padding: const EdgeInsets.all(30.0),
-                    child: PreferencesIconButton(),
-                  ),
-                ),
-              ],
-            );
-          }
-          if (state is ShowGroupPreferences) {
-            return Center(
-              child: SettingsPage(),
-            );
-          }
-        }),
+          },
+        ),
       ),
     );
+  }
+
+  Widget _buildPage(BuildContext context, GroupState state) {
+    if (state is GroupStateLoading) {
+      return CircularProgressIndicator(
+        strokeWidth: 6.0,
+      );
+    }
+    if (state is ShowGroupInfo) {
+      return Stack(
+        children: <Widget>[
+          Center(
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  Container(height: 20.0),
+                  SweetNothingWidget(),
+                  Container(height: 30.0),
+                  PressableDough(
+                    child: ClayContainer(
+                      depth: 30,
+                      spread: 20.0,
+                      curveType: CurveType.concave,
+                      color: BlocProvider.of<ThemeBloc>(context).theme.bgColor,
+                      child: ImageWidget(),
+                    ),
+                  ),
+                  Container(
+                    height: 50.0,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Align(
+            alignment: Alignment.topLeft,
+            child: Padding(
+              padding: const EdgeInsets.all(30.0),
+              child: PreferencesIconButton(),
+            ),
+          ),
+        ],
+      );
+    }
+    if (state is ShowGroupPreferences) {
+      return Center(
+        child: SettingsPage(),
+      );
+    }
   }
 }
 
@@ -91,22 +97,29 @@ class PreferencesIconButton extends StatelessWidget {
   }
 }
 
-
 class SweetNothingWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(40.0),
-      child: SingleChildScrollView(
-        child: Text(
-          '${BlocProvider.of<GroupBloc>(context).todaysNothing()}',
-          style: TextStyle(fontSize: 50.0, fontFamily: 'MaShanZheng'),
+      padding: const EdgeInsets.all(30.0),
+      child: PressableDough(
+        child: ClayContainer(
+          color: BlocProvider.of<ThemeBloc>(context).theme.bgColor,
+          borderRadius: 35.0,
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: SingleChildScrollView(
+              child: Text(
+                '${BlocProvider.of<GroupBloc>(context).todaysNothing()}',
+                style: TextStyle(fontSize: 50.0, fontFamily: 'MaShanZheng'),
+              ),
+            ),
+          ),
         ),
       ),
     );
   }
 }
-
 
 class ImageWidget extends StatelessWidget {
   @override

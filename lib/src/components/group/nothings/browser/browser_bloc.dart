@@ -5,13 +5,13 @@ import 'package:my_love/src/components/group/nothings/nothing.dart';
 import 'package:my_love/src/components/group/nothings/nothings_manager_bloc.dart';
 import 'package:my_love/src/data/db.dart';
 
-class NothingsBrowserBloc extends Bloc<BrowserEvent, BrowserState> {
+class BrowserBloc extends Bloc<BrowserEvent, BrowserState> {
   final NothingsManagerBloc nothingsManagerBloc;
   BrowserRepository repo;
   bool searchRecent = true;
   DocumentSnapshot lastItem;
 
-  NothingsBrowserBloc({this.nothingsManagerBloc})
+  BrowserBloc({this.nothingsManagerBloc})
       : assert(nothingsManagerBloc != null),
         super(BrowserLoading()) {
     repo = BR(
@@ -47,7 +47,11 @@ class NothingsBrowserBloc extends Bloc<BrowserEvent, BrowserState> {
       }
     }
     if (event is NothingSelected) {
-      repo.addNothingToNothingList(event.nothingId);
+      if(nothingsManagerBloc.nothings.length>=10){
+        nothingsManagerBloc.add(BrowserBlocNothingsMax()); 
+      } else {
+        repo.addNothingToNothingList(event.nothingId);
+      }
     }
   }
 

@@ -13,29 +13,41 @@ class RootWidget extends StatelessWidget {
       create: (context) => AuthBloc(),
       child: BlocProvider<ThemeBloc>(
         create: (context) => ThemeBloc(),
-        child: BlocBuilder<ThemeBloc, AppTheme>(
-          builder: (context, theme) {
-            return Scaffold(
+        child: BlocBuilder<ThemeBloc, AppTheme>(builder: (context, theme) {
+          return Theme(
+            data: ThemeData(
+              primaryColor: theme.altColor,
+              accentColor: theme.bgColor,
+              cursorColor: theme.altColor,
+            ),
+            child: Scaffold(
               backgroundColor: theme.bgColor,
               body: BlocBuilder<AuthBloc, AuthState>(
                 builder: (context, authState) {
-                  if (authState is AuthStateAuthenticated) {
-                    return AccountPage();
-                  }
-                  if (authState is AuthStateNotAuthenticated) {
-                    return LoginPage();
-                  }
-                  if (authState is AuthStateUninitialized) {
-                    return SplashScreen();
-                  }
-                  return LoadingScreen();
+                  return AnimatedSwitcher(
+                    duration: Duration(milliseconds: 300),
+                    child: _buildPage(authState),
+                  );
                 },
               ),
-            );
-          }
-        ),
+            ),
+          );
+        }),
       ),
     );
+  }
+
+  Widget _buildPage(AuthState authState) {
+    if (authState is AuthStateAuthenticated) {
+      return AccountPage();
+    }
+    if (authState is AuthStateNotAuthenticated) {
+      return LoginPage();
+    }
+    if (authState is AuthStateUninitialized) {
+      return SplashScreen();
+    }
+    return LoadingScreen();
   }
 }
 

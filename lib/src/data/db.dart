@@ -40,7 +40,7 @@ abstract class DatabaseManager {
 class DB implements DatabaseManager {
   static final DB instance = DB();
   static final Firestore db = Firestore.instance;
-  static const int NOTHINGS_PER_PAGE = 3;
+  static const int NOTHINGS_PER_PAGE = 5;
 
   DocumentReference userDoc(String userId) =>
       db.collection(USERS).document(userId);
@@ -88,13 +88,16 @@ class DB implements DatabaseManager {
 
   Future<void> createGroup(String firstUser, String secondUser) async {
     DocumentReference groupDoc = await db.collection(GROUPS).document();
-    await groupDoc.setData({
-      USERS: [firstUser, secondUser]
-    });
-    return Future.wait([
-      createNothingList(groupDoc.documentID, firstUser),
-      createNothingList(groupDoc.documentID, secondUser)
-    ]);
+
+    return Future.wait(
+      [
+        groupDoc.setData({USERS: [firstUser, secondUser]}),
+        createNothingList(groupDoc.documentID, firstUser),
+        createNothingList(groupDoc.documentID, secondUser),
+        userDoc(firstUser).setData({CREATED_AT: DateTime.now()}),
+        userDoc(secondUser).setData({CREATED_AT: DateTime.now()})
+      ],
+    );
   }
 
   Stream<DocumentSnapshot> getGroupStream(String groupId) {
@@ -184,7 +187,11 @@ class DB implements DatabaseManager {
         .collection(NOTHINGS)
         .document(nothingsCollctiionName(toUserId))
         .get()
-        .then((doc) => List<String>.from(doc.data[NOTHINGS]));
+        .then((doc) {
+          if(!doc.exists){
+            return [];
+          } else return List<String>.from(doc.data[NOTHINGS] ?? []);
+        });
   }
 
   Stream<List<String>> nothingsListStream(String groupId, String toUserId) {

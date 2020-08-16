@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:my_love/src/components/auth/auth_bloc.dart';
 import 'package:my_love/src/components/login/login_bloc.dart';
+import 'package:my_love/src/util/button.dart';
 
 class LoginPage extends StatelessWidget {
   @override
@@ -56,36 +57,39 @@ class _LoginWidgetState extends State<LoginWidget> {
                 children: <Widget>[
                   Column(
                     children: <Widget>[
-                      Text('Email'),
+                      Text('Email', textScaleFactor: 1.2,),
                       TextField(
                         controller: _usernameController,
+                        autofocus: true,
                       ),
                     ],
                   ),
+                  Container(height: 30.0),
                   Column(
                     mainAxisSize: MainAxisSize.min,
                     children: <Widget>[
-                      Text('Password'),
+                      Text('Password', textScaleFactor: 1.2,),
                       TextField(
                         controller: _passwordController,
                         obscureText: true,
                       ),
                     ],
                   ),
+                  Container(height: 30.0),
                   state is! LoginLoading ?
                   Column(
                     mainAxisSize: MainAxisSize.min,
                     children: <Widget>[
-                      RaisedButton(
-                        child: Text('Login'),
+                      AccountButton(
+                        text: 'Login',
                         onPressed: login,
                       ),
-                      RaisedButton(
-                        child: Text('CreateAccount'),
+                      AccountButton(
+                        text: 'CreateAccount',
                         onPressed: createAccount,
                       ),
-                      RaisedButton(
-                        child: Text('Reset Password'),
+                      AccountButton(
+                        text: 'Reset Password',
                         onPressed: resetPassword,
                       ),
                     ],

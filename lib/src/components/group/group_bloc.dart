@@ -22,12 +22,15 @@ class GroupBloc extends Bloc<GroupEvent, GroupState> {
     assert(groupId != null, currentUserId != null);
     repo = GR(groupId: groupId);
     _getSharedPrefs();
-    repo.getGroup().listen((group) {
+    repo.getGroup().listen(_handleGroupUpdates);
+  }
+
+  void _handleGroupUpdates(Group group) async {
+    // await Future.delayed(Duration(seconds: 1));
       currentGroup = group;
       if(sharedPrefs != null){
         add(GoToGroupHome());
       }
-    });
   }
 
   void _getSharedPrefs() async {
@@ -42,7 +45,7 @@ class GroupBloc extends Bloc<GroupEvent, GroupState> {
   Stream<GroupState> mapEventToState(GroupEvent event) async* {
     
     if (event is GoToGroupHome) {
-      if(_isNewDay()){
+      if(_isNewDay() || todaysNothing() == Nothing.defaultNothing.text){
         // get a new nothing
         Nothing newNothing = await repo.getRandomSweetNothing(currentUserId, _nothingsViewed(), resetNothingsViewed);
         String image = getRandomImage();

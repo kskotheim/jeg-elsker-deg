@@ -28,6 +28,11 @@ dependencies:
   equatable: ^1.1.1
   shared_preferences: ^0.5.6
   clay_containers: ^0.2.2
+  dough: ^0.3.4
+  animations: ^1.1.2
+  animated_size_and_fade: ^1.1.2
+  carousel_slider: ^2.2.1
+
 
 
 dev_dependencies:

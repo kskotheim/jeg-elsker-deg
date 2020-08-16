@@ -56,7 +56,18 @@ class NothingsManagerBloc extends Bloc<NothingsEvent, NothingsState>{
       }
     }
     if(event is NewNoteButtonPushed){
-      yield ShowNewNoteForm();
+      if(nothings.length >= 10){
+        yield NothingsUpdated(nothings:nothings, message: 'Ten Notes Max - Remove Notes To Add More');
+        await Future.delayed(Duration(seconds: 1));
+        yield NothingsUpdated(nothings: nothings);
+      } else {
+        yield ShowNewNoteForm();
+      }
+    }
+    if(event is BrowserBlocNothingsMax){
+      yield NothingsUpdated(nothings:nothings, message: 'Ten Notes Max - Remove Notes To Add More');
+      await Future.delayed(Duration(seconds: 1));
+      yield NothingsUpdated(nothings: nothings);
     }
     if(event is BrowseNotesButtonPushed){
       yield ShowBrowseNoteScreen();
@@ -87,6 +98,8 @@ class DeleteNothing extends NothingsEvent {
   DeleteNothing({this.documentId}) : assert(documentId != null);
 }
 
+class BrowserBlocNothingsMax extends NothingsEvent {}
+
 class NewNoteButtonPushed extends NothingsEvent {}
 
 class BrowseNotesButtonPushed extends NothingsEvent {}
@@ -100,7 +113,8 @@ class NothingsLoading extends NothingsState{}
 
 class NothingsUpdated extends NothingsState{
   final List<Nothing> nothings;
-  NothingsUpdated({this.nothings});
+  final String message;
+  NothingsUpdated({this.nothings, this.message});
 }
 
 class ShowNewNoteForm extends NothingsState {}
