@@ -58,6 +58,7 @@ class NothingsListPage extends StatelessWidget {
                 ],
               ),
               NothingsList(browserState),
+              Text('(Press and hold on note to report)', textScaleFactor: .8,),
             ],
           ),
         );
@@ -93,6 +94,28 @@ class NothingsList extends StatelessWidget {
                     ),
                     onTap: () => BlocProvider.of<BrowserBloc>(context).add(
                       NothingSelected(nothing.documentId),
+                    ),
+                    onLongPress: () => showDialog(
+                      context: context,
+                      child: SimpleDialog(
+                        title: Text("Report note '${nothing.text}'?"),
+                        children: [
+                          FlatButton(
+                            child: Text('Report'),
+                            onPressed: () => Navigator.pop(context, true),
+                          ),
+                          FlatButton(
+                            child: Text('Cancel'),
+                            onPressed: () => Navigator.pop(context, false),
+                          )
+                        ],
+                      ),
+                    ).then(
+                      (value) {
+                        if (value == true) {
+                          BlocProvider.of<BrowserBloc>(context).add(ReportNothing(nothing.documentId));
+                        }
+                      },
                     ),
                   ),
                 )

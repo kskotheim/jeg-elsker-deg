@@ -7,6 +7,7 @@ abstract class BrowserRepository {
   Future<List<DocumentSnapshot>> getMostPopularNothings({DocumentSnapshot startAfter});
 
   Future<void> addNothingToNothingList(String nothingId);
+  Future<void> createReport(String commentId, String userId);
 
 }
 
@@ -45,4 +46,7 @@ class BR implements BrowserRepository{
     return;
   }
 
+  Future<void> createReport(String commentId, String userId){
+    return db.createReport(commentId, userId);
+  }
 }

@@ -4,6 +4,22 @@ Introduction
 
 By downloading or using the app, these terms will automatically apply to you. Please read them. 
 
+Comments and User Interaction
+
+By using this service you agree not to engage in any offensive or inappropriate behavior, including:
+
+-Harassment or abuse of other users
+-Negative or derogatory comments about religion, ethnicity, nationality, gender, disability, or any group of people
+-Explicit depictions of violence
+-Posting copyrighted or otherwise legally protected material
+-Posting personally identifying information of yourself or anyone else
+-Any comments that are meant to offend, intimidate, harass, or marginalize
+-Otherwise abusing the platform in such a way that negatively impacts other users' experience
+
+If you engage in offensive or inappropriate behavior in this app your account, any or all posts you make may be permanently removed from the platform. 
+
+You also acknowledge that you may be exposed to inappropriate comments that other users have submitted which violate these rules. You are encouraged report comments which violates these rules, or comments you believe to be inappropriate. You can report a comment through this platform by pressing and holding on the comment, and then 'Report'. 
+
 Charges for Service
 
 Snapdragon Apps  reserves the right to introduce in-app-purchase(s) to unlock additional functionality beyond the free experience. This may include the ability to keep many more notes and additional features which are currently in development. 

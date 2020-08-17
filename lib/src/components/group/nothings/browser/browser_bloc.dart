@@ -53,17 +53,16 @@ class BrowserBloc extends Bloc<BrowserEvent, BrowserState> {
         repo.addNothingToNothingList(event.nothingId);
       }
     }
+    if(event is ReportNothing){
+      repo.createReport(event.commentId, nothingsManagerBloc.userId);
+    }
   }
 
   void setLastItem(List<DocumentSnapshot> nothingDocs){
-          print("length: ${nothingDocs.length}");
-
     if (nothingDocs.length < DB.NOTHINGS_PER_PAGE) {
-      print('this was true');
           lastItem = null;
         } else {
           lastItem = nothingDocs[nothingDocs.length - 1];
-          print("${lastItem.documentID}");
         }
   }
 
@@ -85,6 +84,11 @@ class SearchRecentSelected extends BrowserEvent {}
 class SearchPopularSelected extends BrowserEvent {}
 
 class NextPageButtonPushed extends BrowserEvent {}
+
+class ReportNothing extends BrowserEvent{
+  final String commentId;
+  ReportNothing(this.commentId) : assert(commentId!=null);
+}
 
 class NothingSelected extends BrowserEvent {
   final String nothingId;

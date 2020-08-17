@@ -28,6 +28,8 @@
 .packages
 .pub-cache/
 .pub/
+key.properties
+
 /build/
 
 # Web related

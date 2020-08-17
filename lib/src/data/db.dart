@@ -31,6 +31,10 @@ abstract class DatabaseManager {
   Future<void> updateNothingList(
       String groupId, String toUserId, List<String> nothingList);
 
+  Future<void> createReport(String commentId, String userId);
+  Future<List<DocumentSnapshot>> getReports();
+  Future<void> deleteReport(String reportId);
+
   //TODO: add flowers, winks, poems
 
   Future<void> addWink(String groupId, String userId, int winkActiveUntil);
@@ -227,6 +231,19 @@ class DB implements DatabaseManager {
         .map((document) => document.data[UNTIL]);
   }
 
+
+  // Report Methods
+
+  Future<void> createReport(String commentId, String userId){
+    return db.collection(REPORTS).document().setData({COMMENTID: commentId, CREATORID: userId});
+  }
+  Future<List<DocumentSnapshot>> getReports(){
+    return db.collection(REPORTS).getDocuments().then((query) => query.documents);
+  }
+  Future<void> deleteReport(String reportId){
+    return db.collection(REPORTS).document(reportId).delete();
+  }
+
   // for generating passwords to request account access
   String getRandomSixCharacterString() {
     String randomChar() {
@@ -293,5 +310,7 @@ const String WINKS = 'Winks';
 const String TEXT = 'Text';
 const String USECT = 'UseCt';
 const String CREATORID = 'CreatorId';
+const String COMMENTID = 'CommentId';
+const String REPORTS = 'Reports';
 
 String nothingsCollctiionName(String toUserId) => 'Nothings_For_$toUserId';
