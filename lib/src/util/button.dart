@@ -11,12 +11,19 @@ class AccountButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return RaisedButton(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(18.0),
+        side: BorderSide(
+            color: BlocProvider.of<ThemeBloc>(context).theme.altColor,
+            width: 1.4),
+      ),
       child: Text(
         text,
-        style: TextStyle(color: Colors.white),
+        style: TextStyle(
+            color: BlocProvider.of<ThemeBloc>(context).theme.altColor),
       ),
       onPressed: onPressed,
-      color: BlocProvider.of<ThemeBloc>(context).theme.altColor,
+      color: BlocProvider.of<ThemeBloc>(context).theme.bgColor.withAlpha(230),
     );
   }
 }

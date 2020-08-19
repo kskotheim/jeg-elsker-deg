@@ -1,4 +1,4 @@
-import 'package:clay_containers/constants.dart';
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:clay_containers/widgets/clay_containers.dart';
 import 'package:dough/dough.dart';
 import 'package:flutter/material.dart';
@@ -19,15 +19,13 @@ class GroupPage extends StatelessWidget {
           groupId: groupId,
           currentUserId:
               BlocProvider.of<AccountBloc>(context).currentUser.userId),
-      child: Center(
-        child: BlocBuilder<GroupBloc, GroupState>(
-          builder: (context, state) {
-            return AnimatedSwitcher(
-              duration: Duration(milliseconds: 400),
-              child: _buildPage(context, state),
-            );
-          },
-        ),
+      child: BlocBuilder<GroupBloc, GroupState>(
+        builder: (context, state) {
+          return AnimatedSwitcher(
+            duration: Duration(milliseconds: 400),
+            child: _buildPage(context, state),
+          );
+        },
       ),
     );
   }
@@ -42,27 +40,16 @@ class GroupPage extends StatelessWidget {
       return Stack(
         children: <Widget>[
           Center(
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  Container(height: 20.0),
-                  SweetNothingWidget(),
-                  Container(height: 30.0),
-                  PressableDough(
-                    child: ClayContainer(
-                      depth: 30,
-                      spread: 20.0,
-                      curveType: CurveType.concave,
-                      color: BlocProvider.of<ThemeBloc>(context).theme.bgColor,
-                      child: ImageWidget(),
-                    ),
-                  ),
-                  Container(
-                    height: 50.0,
-                  ),
-                ],
-              ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: <Widget>[
+                Container(),
+                SweetNothingWidget(),
+                PressableDough(
+                  child: ImageWidget(),
+                ),
+                Container(),
+              ],
             ),
           ),
           Align(
@@ -100,18 +87,35 @@ class PreferencesIconButton extends StatelessWidget {
 class SweetNothingWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    double containerHeight = MediaQuery.of(context).size.height * .2 +
+        ((BlocProvider.of<GroupBloc>(context)
+                    .todaysNothing()
+                    .length
+                    .toDouble() /
+                160) *
+            MediaQuery.of(context).size.height *
+            .1);
+
     return Padding(
       padding: const EdgeInsets.all(30.0),
       child: PressableDough(
         child: ClayContainer(
           color: BlocProvider.of<ThemeBloc>(context).theme.bgColor,
           borderRadius: 35.0,
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: SingleChildScrollView(
-              child: Text(
-                '${BlocProvider.of<GroupBloc>(context).todaysNothing()}',
-                style: TextStyle(fontSize: 50.0, fontFamily: 'MaShanZheng'),
+          child: Container(
+            height: containerHeight,
+            width: MediaQuery.of(context).size.width * .7,
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Center(
+                child: AutoSizeText(
+                  '${BlocProvider.of<GroupBloc>(context).todaysNothing()}',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 50.0,
+                    fontFamily: 'MaShanZheng',
+                  ),
+                ),
               ),
             ),
           ),
@@ -131,9 +135,23 @@ class ImageWidget extends StatelessWidget {
     if (imageWidth < 225.0) {
       imageWidth = 225.0;
     }
-    return Image(
-      width: imageWidth,
-      image: AssetImage(BlocProvider.of<GroupBloc>(context).todaysImage()),
+    return ClayContainer(
+      color: BlocProvider.of<ThemeBloc>(context).theme.bgColor,
+      spread: 30.0,
+      // decoration: BoxDecoration(
+      //   borderRadius: BorderRadius.circular(20.0),
+      //   boxShadow: [
+      //     CustomBoxShadow(
+      //         color: Colors.black54,
+      //         offset: Offset.zero,
+      //         blurRadius: 30.0,
+      //         blurStyle: BlurStyle.outer),
+      //   ],
+      // ),
+      child: Image(
+        width: imageWidth,
+        image: AssetImage(BlocProvider.of<GroupBloc>(context).todaysImage()),
+      ),
     );
   }
 }
