@@ -5,6 +5,7 @@ import 'package:my_love/src/components/group/group.dart';
 import 'package:my_love/src/components/group/group_repo.dart';
 import 'package:my_love/src/components/group/nothings/nothing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:my_love/src/util/wave_animation.dart';
 
 
 class GroupBloc extends Bloc<GroupEvent, GroupState> {
@@ -12,14 +13,15 @@ class GroupBloc extends Bloc<GroupEvent, GroupState> {
   final String currentUserId;
   Group currentGroup;
 
-
+  final WaveBloc waveBloc;
   GroupRepository repo;
   SharedPreferences sharedPrefs;
 
   List<String> nothingIds;
 
-  GroupBloc({this.groupId, this.currentUserId}) : super(GroupStateLoading()) {
+  GroupBloc({this.groupId, this.currentUserId, this.waveBloc}) : super(GroupStateLoading()) {
     assert(groupId != null, currentUserId != null);
+    assert(waveBloc !=  null);
     repo = GR(groupId: groupId);
     _getSharedPrefs();
     repo.getGroup().listen(_handleGroupUpdates);
@@ -46,6 +48,8 @@ class GroupBloc extends Bloc<GroupEvent, GroupState> {
     
     if (event is GoToGroupHome) {
       if(_isNewDay() || todaysNothing() == Nothing.defaultNothing.text){
+        // set new waves
+        waveBloc.add(NewDayNewWaves());
         // get a new nothing
         Nothing newNothing = await repo.getRandomSweetNothing(currentUserId, _nothingsViewed(), resetNothingsViewed);
         String image = getRandomImage();

@@ -1,4 +1,7 @@
+import 'package:bloc/bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:simple_animations/simple_animations.dart';
 import 'dart:math';
 
@@ -107,8 +110,8 @@ class BottomCurvePainter extends CustomPainter {
     final endPointY = height * (0.5 + 0.4 * y3) + verticalOffset;
 
     path.moveTo(size.width * 0, startPointY);
-    path.quadraticBezierTo(size.width * 0.5, controlPointY,
-        size.width, endPointY);
+    path.quadraticBezierTo(
+        size.width * 0.5, controlPointY, size.width, endPointY);
     path.lineTo(size.width, height + verticalOffset);
     path.lineTo(0, height + verticalOffset);
     path.close();
@@ -119,4 +122,146 @@ class BottomCurvePainter extends CustomPainter {
   bool shouldRepaint(CustomPainter oldDelegate) {
     return true;
   }
+}
+
+class PageOfWaves extends StatelessWidget {
+  final Widget child;
+  PageOfWaves({this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocProvider<WaveBloc>(
+      create: (context) => WaveBloc(),
+      child: BlocBuilder<WaveBloc, List<double>>(
+        builder: (context, waveVals) {
+          return
+              AnimatedSwitcher(
+                              duration: const Duration(seconds: 1),
+                              child: MyLoveWave(
+                  waveFactor: waveVals[0],
+            child: MyLoveWave(
+                waveFactor: waveVals[1],
+                child: MyLoveWave(
+                  waveFactor: waveVals[2],
+                  child: MyLoveWave(
+                    waveFactor: waveVals[3],
+                      child: child),
+                ),
+            ),
+          ),
+              );
+        },
+      ),
+    );
+  }
+}
+
+class MyLoveWave extends AnimatedWave {
+  // takes a coded value "wave factor" and decodes it into a wave of certain position/direction/etc
+
+  final double waveFactor;
+  final Random random = Random();
+  final Widget child;
+
+  double waveSpeed;
+  double waveHeight;
+  double alphaVal;
+  bool reverse;
+  bool top;
+
+  MyLoveWave({this.waveFactor = 0.0, this.child}) {
+    double factorDecoded =
+        waveFactor.abs() > 10 ? waveFactor.abs() - 10 : waveFactor.abs();
+    waveSpeed = (random.nextDouble() + 1) / (factorDecoded * 8);
+    waveHeight = factorDecoded / 3;
+    top = waveFactor.abs() > 10;
+    reverse = waveFactor > 0;
+    alphaVal = 15 + ((1 - waveFactor) * 50);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedWave(
+      height: waveHeight * MediaQuery.of(context).size.height,
+      speed: waveSpeed,
+      top: top,
+      reverse: reverse,
+      child: child,
+    );
+  }
+}
+
+class WaveBloc extends Bloc<WaveBlocEvent, List<double>> {
+  // sets values for waves according to values stored in shared prefs
+  // recieves new day events and calculates + stores new random wave values
+
+  // positive / negative values indicate wave direction
+  // absolute value greater than 10 indicates top wave
+  // e.g. [-.3, .1, -10.5, 10.2] indicate bottom reverse, bottom forward, top reverse, and top forward waves
+  // wave height, opacity, and speed are determined by the wave factor
+  // (wave factor scales from 0 to 1)
+  static const _NUMBER_OF_WAVES = 4;
+
+  static const List<double> initialState = const [-.3, 10.45, -10.36, .75];
+  static const _WAVE_FACTOR_KEY = 'Wave Factors';
+  SharedPreferences prefs;
+  final Random random = Random();
+
+  WaveBloc() : super(initialState) {
+    getState();
+  }
+
+  Future<void> getState() async {
+    prefs = await SharedPreferences.getInstance();
+    List<double> factors;
+    try {
+      factors = prefs
+              .getStringList(_WAVE_FACTOR_KEY)
+              .map((e) => double.parse(e)).toList() ??
+          initialState;
+    } catch (e) {
+      factors = initialState;
+    }
+    add(LoadWaves(factors));
+  }
+
+  @override
+  Stream<List<double>> mapEventToState(WaveBlocEvent event) async* {
+    if (event is NewDayNewWaves) {
+      // get wave factors
+      List<double> newFactors = [];
+
+      for (int i = 0; i < _NUMBER_OF_WAVES; i++) {
+        double newVal = random.nextDouble();
+        newVal += .2;
+        newVal *= .8;
+        if (random.nextBool()) {
+          newVal += 10;
+        }
+        if (random.nextBool()) {
+          newVal *= -1;
+        }
+        newFactors.add(newVal);
+      }
+
+      // save wave factors
+      prefs.setStringList(
+          _WAVE_FACTOR_KEY, newFactors.map((e) => e.toString()).toList());
+
+      // yield new state
+      yield newFactors;
+    }
+    if (event is LoadWaves) {
+      yield event.waveFactors;
+    }
+  }
+}
+
+class WaveBlocEvent {}
+
+class NewDayNewWaves extends WaveBlocEvent {}
+
+class LoadWaves extends WaveBlocEvent {
+  final List<double> waveFactors;
+  LoadWaves(this.waveFactors) : assert(waveFactors != null);
 }

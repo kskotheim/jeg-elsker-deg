@@ -20,35 +20,16 @@ class RootWidget extends StatelessWidget {
               primaryColor: theme.altColor,
               accentColor: theme.bgColor,
               cursorColor: theme.altColor,
+              fontFamily: 'Marcellus',
             ),
             child: Scaffold(
               backgroundColor: theme.bgColor,
               body: BlocBuilder<AuthBloc, AuthState>(
                 builder: (context, authState) {
-                  return AnimatedWave(
-                    height: MediaQuery.of(context).size.height * .1,
-                    speed: .2,
-                    alpha: 60,
-                    reverse: true,
-                    child: AnimatedWave(
-                      height: MediaQuery.of(context).size.height * .15,
-                      speed: .4,
-                      child: AnimatedWave(
-                        height: MediaQuery.of(context).size.height * .25,
-                        speed: .25,
-                        top: false,
-                        alpha: 20,
-                        child: AnimatedWave(
-                          height: MediaQuery.of(context).size.height * .12,
-                          reverse: true,
-                          top: false,
-                          speed: .4,
-                          child: AnimatedSwitcher(
-                            duration: Duration(milliseconds: 300),
-                            child: _buildPage(authState),
-                          ),
-                        ),
-                      ),
+                  return PageOfWaves(
+                    child: AnimatedSwitcher(
+                      duration: Duration(milliseconds: 300),
+                      child: _buildPage(authState),
                     ),
                   );
                 },

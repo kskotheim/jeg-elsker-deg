@@ -7,6 +7,7 @@ import 'package:my_love/src/components/account/account_bloc.dart';
 import 'package:my_love/src/components/group/group_bloc.dart';
 import 'package:my_love/src/components/settings/settings_bloc.dart';
 import 'package:my_love/src/components/settings/settings_page.dart';
+import 'package:my_love/src/util/wave_animation.dart';
 
 class GroupPage extends StatelessWidget {
   final String groupId;
@@ -16,9 +17,10 @@ class GroupPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider<GroupBloc>(
       create: (context) => GroupBloc(
-          groupId: groupId,
-          currentUserId:
-              BlocProvider.of<AccountBloc>(context).currentUser.userId),
+        groupId: groupId,
+        currentUserId: BlocProvider.of<AccountBloc>(context).currentUser.userId,
+        waveBloc: BlocProvider.of<WaveBloc>(context),
+      ),
       child: BlocBuilder<GroupBloc, GroupState>(
         builder: (context, state) {
           return AnimatedSwitcher(
