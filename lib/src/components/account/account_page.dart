@@ -8,6 +8,8 @@ import 'package:my_love/src/components/auth/auth_bloc.dart';
 import 'package:my_love/src/components/group/group_page.dart';
 import 'package:my_love/src/components/settings/settings_bloc.dart';
 import 'package:my_love/src/components/settings/settings_page.dart';
+import 'package:my_love/src/components/settings/stats/stats_bloc.dart';
+import 'package:my_love/src/components/settings/theme/theme_selector.dart';
 import 'package:my_love/src/root.dart';
 
 class AccountPage extends StatelessWidget {
@@ -28,6 +30,7 @@ class AccountPage extends StatelessWidget {
           if (state is ShowUserPage) {
             return UserPage();
           }
+
           if (state is ShowGroupPage) {
             return GroupPage(groupId: state.groupId);
           }

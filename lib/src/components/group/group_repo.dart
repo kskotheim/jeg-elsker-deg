@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:my_love/src/components/group/group.dart';
 import 'package:my_love/src/components/group/nothings/nothing.dart';
 import 'package:my_love/src/data/db.dart';
+import 'package:my_love/src/data/strings.dart';
 
 abstract class GroupRepository {
   Stream<Group> getGroup();
@@ -16,6 +17,7 @@ abstract class GroupRepository {
   Future<Nothing> getNothing(String nothingId, String toUserId);
   Future<void> deletePrivateNothing(String nothingId, String toUserId);
   Future<void> deletePublicNothing(String nothingId, String toUserId);
+  Future<void> incrementDaysActive(String userId, Group group);
 
   Future<void> addWink(String userId);
   Stream<int> winkActiveUntilStream(String userId);
@@ -30,6 +32,14 @@ class GR implements GroupRepository {
 
   Stream<Group> getGroup() {
     return db.getGroupStream(groupId).map((snapshot) {
+      String firstUser = snapshot.data[USERS][0];
+      String secondUser = snapshot.data[USERS][1];
+      if(!snapshot.data.containsKey(visitStr(firstUser))){
+        db.updateGroup(groupId, {visitStr(firstUser): 1});
+      }
+      if(!snapshot.data.containsKey(visitStr(secondUser))){
+        db.updateGroup(groupId, {visitStr(secondUser): 1});
+      }
       return Group.fromSnapshot(snapshot);
     });
   }
@@ -91,9 +101,12 @@ class GR implements GroupRepository {
     Nothing nothing = await db.getNothing(nothingId).then((value) => Nothing.fromDocumentSnapshot(value));
     nothingList.remove(nothingId);
     await db.updateNothingList(groupId, toUserId, nothingList);
-    return db.updateNothing(nothingId, {USECT: nothing.useCt -1});
+    return db.updateNothing(nothingId, {USE_CT: nothing.useCt -1});
   }
 
+  Future<void> incrementDaysActive(String userId, Group group){
+    return db.updateGroup(groupId, {visitStr(userId): group.visitCount[userId] + 1});
+  }
 
   Future<void> addWink(String userId) {
     return db.addWink(groupId, userId,

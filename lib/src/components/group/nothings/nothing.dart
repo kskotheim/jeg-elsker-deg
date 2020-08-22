@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:my_love/src/data/db.dart';
+import 'package:my_love/src/data/strings.dart';
 
 class Nothing {
   final String documentId;
@@ -17,14 +17,14 @@ class Nothing {
       : documentId = snapshot.documentID,
         text = snapshot.data[TEXT],
         public = snapshot.data[PUBLIC],
-        useCt = snapshot.data[USECT],
-        creatorId = snapshot.data[CREATORID],
+        useCt = snapshot.data[USE_CT],
+        creatorId = snapshot.data[CREATOR_ID],
         createdAt = snapshot.data[CREATED_AT];
 
   Map<String, dynamic> toJSON() => {
         TEXT: text,
         PUBLIC: public,
-        USECT: useCt,
-        CREATORID: creatorId,
+        USE_CT: useCt,
+        CREATOR_ID: creatorId,
       };
 }

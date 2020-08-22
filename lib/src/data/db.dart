@@ -1,10 +1,11 @@
 import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:my_love/src/data/strings.dart';
 
 abstract class DatabaseManager {
   Future<DocumentSnapshot> createUser(String userId);
-  Stream<DocumentSnapshot> getUserStrean(String userId);
+  Stream<DocumentSnapshot> getUserStream(String userId);
   Future<DocumentSnapshot> getSingleUser(String userId);
   Future<DocumentSnapshot> getUserWhere(String field, dynamic val);
   Future<void> updateUser(String userId, Map<String, dynamic> data);
@@ -35,8 +36,10 @@ abstract class DatabaseManager {
   Future<List<DocumentSnapshot>> getReports();
   Future<void> deleteReport(String reportId);
 
-  //TODO: add flowers, winks, poems
+  Stream<int> getPostCount(String userId);
+  Stream<int> getPostUseCount(String userId);
 
+  //TODO: add flowers, winks, poems
   Future<void> addWink(String groupId, String userId, int winkActiveUntil);
   Stream<int> winkStream(String groupId, String userId);
 }
@@ -63,7 +66,7 @@ class DB implements DatabaseManager {
     return userDoc(userId).get();
   }
 
-  Stream<DocumentSnapshot> getUserStrean(String userId) {
+  Stream<DocumentSnapshot> getUserStream(String userId) {
     return userDoc(userId).snapshots();
   }
 
@@ -91,11 +94,11 @@ class DB implements DatabaseManager {
   // GROUP methods
 
   Future<void> createGroup(String firstUser, String secondUser) async {
-    DocumentReference groupDoc = await db.collection(GROUPS).document();
+    DocumentReference groupDoc = db.collection(GROUPS).document();
 
     return Future.wait(
       [
-        groupDoc.setData({USERS: [firstUser, secondUser]}),
+        groupDoc.setData({USERS: [firstUser, secondUser], visitStr(firstUser):0, visitStr(secondUser):0}),
         createNothingList(groupDoc.documentID, firstUser),
         createNothingList(groupDoc.documentID, secondUser),
         userDoc(firstUser).setData({CREATED_AT: DateTime.now()}),
@@ -137,8 +140,8 @@ class DB implements DatabaseManager {
       TEXT: text,
       CREATED_AT: DateTime.now().millisecondsSinceEpoch,
       PUBLIC: public,
-      CREATORID: createdBy,
-      USECT: 1
+      CREATOR_ID: createdBy,
+      USE_CT: 1
     });
     return doc.documentID;
   }
@@ -214,6 +217,33 @@ class DB implements DatabaseManager {
         .updateData({NOTHINGS: nothingList});
   }
 
+  // POST-COUNT METHODS
+  Stream<int> getPostCount(String userId) {
+    return db.collection(NOTHINGS)
+    .where(CREATOR_ID, isEqualTo: userId)
+    .where(PUBLIC, isEqualTo: true).snapshots()
+    .map((event) {
+      return event.documents.length;
+    });
+  }
+
+  Stream<int> getPostUseCount(String userId){
+    return db.collection(NOTHINGS)
+    .where(CREATOR_ID, isEqualTo: userId)
+    .where(PUBLIC, isEqualTo: true)
+    .where(USE_CT, isGreaterThan: 1).snapshots().map(
+      (event) {
+        if(event.documents.isEmpty){
+          return 0;
+        } else {
+          return event.documents
+          .map((e) => e.data[USE_CT]-1)
+          .reduce((x, y) => x + y);
+        }
+      },
+    );
+  }
+
   // WINK methods
 
   Future<void> addWink(String groupId, String userId, int winkActiveUntil) {
@@ -235,7 +265,7 @@ class DB implements DatabaseManager {
   // Report Methods
 
   Future<void> createReport(String commentId, String userId){
-    return db.collection(REPORTS).document().setData({COMMENTID: commentId, CREATORID: userId});
+    return db.collection(REPORTS).document().setData({COMMENT_ID: commentId, CREATOR_ID: userId});
   }
   Future<List<DocumentSnapshot>> getReports(){
     return db.collection(REPORTS).getDocuments().then((query) => query.documents);
@@ -294,23 +324,6 @@ class DB implements DatabaseManager {
   }
 }
 
-// db strings
-const String NAME = 'Name';
-const String USERS = 'Users';
-const String OWNER = 'Owner';
-const String GROUPS = 'Groups';
-const String NOTHINGS = 'Nothings';
-const String CREATED_AT = 'CreatedAt';
-const String PUBLIC = 'Public';
-const String PASSWORD = 'Password';
-const String FROM = 'From';
-const String TO = 'To';
-const String UNTIL = 'Until';
-const String WINKS = 'Winks';
-const String TEXT = 'Text';
-const String USECT = 'UseCt';
-const String CREATORID = 'CreatorId';
-const String COMMENTID = 'CommentId';
-const String REPORTS = 'Reports';
+
 
 String nothingsCollctiionName(String toUserId) => 'Nothings_For_$toUserId';

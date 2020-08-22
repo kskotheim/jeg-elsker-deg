@@ -1,6 +1,6 @@
 import 'package:bloc/bloc.dart';
 import 'package:my_love/src/components/settings/settings_repo.dart';
-import 'package:my_love/src/components/settings/theme.dart';
+import 'package:my_love/src/components/settings/theme/theme.dart';
 
 class ThemeBloc extends Bloc<ThemeEvent, AppTheme>{
 

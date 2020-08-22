@@ -7,7 +7,6 @@ import 'package:my_love/src/components/group/group_bloc.dart';
 import 'package:my_love/src/components/group/nothings/browser/browser.dart';
 import 'package:my_love/src/components/group/nothings/nothing.dart';
 import 'package:my_love/src/components/group/nothings/nothings_manager_bloc.dart';
-import 'package:my_love/src/components/settings/settings_bloc.dart';
 import 'package:my_love/src/components/settings/settings_page.dart';
 import 'package:my_love/src/util/bool_bloc.dart';
 
@@ -49,33 +48,38 @@ class _NothingsManagerPageState extends State<NothingsManagerPage>
     with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<ShowNothingsManager, bool>(
-      builder: (context, showNothingsManager) {
-        return AnimatedSizeAndFade(
-          vsync: this,
-          fadeDuration: TRANSITION_DURATION,
-          sizeDuration: TRANSITION_DURATION,
-          child: _buildPage(context, showNothingsManager),
-        );
-      },
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        InkWell(
+          child: Container(
+            decoration: borderDecoration(context),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                titleText('Notes', context),
+              ],
+            ),
+          ),
+          onTap: () => BlocProvider.of<ShowNothingsManager>(context).toggle(),
+        ),
+        BlocBuilder<ShowNothingsManager, bool>(
+          builder: (context, showNothingsManager) {
+            return AnimatedSizeAndFade(
+              vsync: this,
+              fadeDuration: TRANSITION_DURATION,
+              sizeDuration: TRANSITION_DURATION,
+              child: _buildPage(context, showNothingsManager),
+            );
+          },
+        ),
+      ],
     );
   }
 
   Widget _buildPage(BuildContext context, bool showNothingsManager) {
-    
     if (!showNothingsManager) {
-      return Container(
-        decoration: borderDecoration(context),
-        child: InkWell(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              titleText('Notes', context),
-            ],
-          ),
-          onTap: () => BlocProvider.of<ShowNothingsManager>(context).toggle(),
-        ),
-      );
+      return Container();
     } else
       return BlocBuilder<NothingsManagerBloc, NothingsState>(
           builder: (context, nothingsState) {
@@ -92,21 +96,6 @@ class _NothingsManagerPageState extends State<NothingsManagerPage>
           return Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              InkWell(
-                child: Container(
-                  decoration: borderDecoration(context),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      titleText(
-                          'Notes: ${nothingsState is NothingsUpdated ? nothingsState.nothings.length : '?'}/10',
-                          context),
-                    ],
-                  ),
-                ),
-                onTap: () =>
-                    BlocProvider.of<ShowNothingsManager>(context).toggle(),
-              ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
@@ -124,6 +113,7 @@ class _NothingsManagerPageState extends State<NothingsManagerPage>
                       nothings: nothingsState.nothings,
                     )
                   : CircularProgressIndicator(),
+              Text('${nothingsState is NothingsUpdated ? nothingsState.nothings.length : '?'}/10'),
             ],
           );
         } else if (nothingsState is ShowNewNoteForm) {
@@ -133,7 +123,6 @@ class _NothingsManagerPageState extends State<NothingsManagerPage>
         }
       });
   }
-
 }
 
 class NewNoteButton extends StatelessWidget {

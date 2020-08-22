@@ -4,9 +4,11 @@ import 'package:dough/dough.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:my_love/src/components/account/account_bloc.dart';
+import 'package:my_love/src/components/auth/auth_bloc.dart';
 import 'package:my_love/src/components/group/group_bloc.dart';
 import 'package:my_love/src/components/settings/settings_bloc.dart';
 import 'package:my_love/src/components/settings/settings_page.dart';
+import 'package:my_love/src/components/settings/stats/stats_bloc.dart';
 import 'package:my_love/src/util/wave_animation.dart';
 
 class GroupPage extends StatelessWidget {
@@ -21,11 +23,21 @@ class GroupPage extends StatelessWidget {
         currentUserId: BlocProvider.of<AccountBloc>(context).currentUser.userId,
         waveBloc: BlocProvider.of<WaveBloc>(context),
       ),
-      child: BlocBuilder<GroupBloc, GroupState>(
-        builder: (context, state) {
-          return AnimatedSwitcher(
-            duration: Duration(milliseconds: 400),
-            child: _buildPage(context, state),
+      child: Builder(
+        builder: (context) {
+          return BlocProvider<StatsBloc>(
+            create: (context) => StatsBloc(
+              userId: BlocProvider.of<AuthBloc>(context).token,
+              groupBloc: BlocProvider.of<GroupBloc>(context),
+            ),
+            child: BlocBuilder<GroupBloc, GroupState>(
+              builder: (context, state) {
+                return AnimatedSwitcher(
+                  duration: Duration(milliseconds: 400),
+                  child: _buildPage(context, state),
+                );
+              },
+            ),
           );
         },
       ),

@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:my_love/src/components/group/nothings/nothing.dart';
 import 'package:my_love/src/data/db.dart';
+import 'package:my_love/src/data/strings.dart';
 
 abstract class BrowserRepository {
   Future<List<DocumentSnapshot>> getMostRecentNothings({DocumentSnapshot startAfter});
@@ -30,16 +31,16 @@ class BR implements BrowserRepository{
   }
   Future<List<DocumentSnapshot>> getMostPopularNothings({DocumentSnapshot startAfter}){
     if(startAfter == null){
-      return db.getNothingsOrderBy(USECT);
+      return db.getNothingsOrderBy(USE_CT);
     } else {
-      return db.getNothingsOrderByStartAfter(USECT, startAfter);
+      return db.getNothingsOrderByStartAfter(USE_CT, startAfter);
     }
   }
   Future<void> addNothingToNothingList(String nothingId) async {
     List<String> nothingList = await db.getNothingList(groupId, toUserId);
     if(!nothingList.contains(nothingId)){
       Nothing nothing = await db.getNothing(nothingId).then((value) => Nothing.fromDocumentSnapshot(value));
-      await db.updateNothing(nothingId, {USECT: nothing.useCt + 1});
+      await db.updateNothing(nothingId, {USE_CT: nothing.useCt + 1});
       nothingList.add(nothingId);
       await db.updateNothingList(groupId, toUserId, nothingList);
     }

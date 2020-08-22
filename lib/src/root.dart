@@ -4,17 +4,24 @@ import 'package:my_love/src/components/account/account_page.dart';
 import 'package:my_love/src/components/auth/auth_bloc.dart';
 import 'package:my_love/src/components/login/login_page.dart';
 import 'package:my_love/src/components/settings/settings_bloc.dart';
-import 'package:my_love/src/components/settings/theme.dart';
+import 'package:my_love/src/components/settings/stats/stats_bloc.dart';
+import 'package:my_love/src/components/settings/theme/theme.dart';
 import 'package:my_love/src/util/wave_animation.dart';
 
 class RootWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return BlocProvider<AuthBloc>(
-      create: (context) => AuthBloc(),
-      child: BlocProvider<ThemeBloc>(
-        create: (context) => ThemeBloc(),
-        child: BlocBuilder<ThemeBloc, AppTheme>(builder: (context, theme) {
+    return MultiBlocProvider(
+      providers: <BlocProvider>[
+        BlocProvider<AuthBloc>(
+          create: (context) => AuthBloc(),
+        ),
+        BlocProvider<ThemeBloc>(
+          create: (context) => ThemeBloc(),
+        ),
+      ],
+      child: BlocBuilder<ThemeBloc, AppTheme>(
+        builder: (context, theme) {
           return Theme(
             data: ThemeData(
               primaryColor: theme.altColor,
@@ -36,7 +43,7 @@ class RootWidget extends StatelessWidget {
               ),
             ),
           );
-        }),
+        },
       ),
     );
   }
